@@ -13,7 +13,6 @@
 #  limitations under the License.
 from dataclasses import dataclass
 from typing import Optional, Union
-from xmlrpc.client import Boolean
 
 from docx.enum.dml import MSO_THEME_COLOR as MSO_THEME_COLOR_DOCX
 from docx.shared import RGBColor as DocxRGBColor
@@ -76,7 +75,7 @@ def merge_runs_with_same_formatting(paragraph: CommonParagraph):
             run_idx += 1
 
 
-def has_same_formatting(run_a: CommonRun, run_b: CommonRun) -> Boolean:
+def has_same_formatting(run_a: CommonRun, run_b: CommonRun) -> bool:
     return get_font_properties(run_a) == get_font_properties(run_b)
 
 
