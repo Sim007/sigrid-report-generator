@@ -29,13 +29,15 @@ class TestOSHPortfolioData:
 
     def setup_method(self):
         """Reset portfolio context before each test."""
-        portfolio_filters._team = None
-        portfolio_filters._division = None
+        portfolio_filters._filter_state.update(
+            {k: None for k in portfolio_filters.FILTER_CONFIGURATION}
+        )
 
     def teardown_method(self):
         """Clean up portfolio context and cached data after each test."""
-        portfolio_filters._team = None
-        portfolio_filters._division = None
+        portfolio_filters._filter_state.update(
+            {k: None for k in portfolio_filters.FILTER_CONFIGURATION}
+        )
 
         cache_attrs = ["raw_data", "metadata", "period", "system_names"]
         for attr in cache_attrs:

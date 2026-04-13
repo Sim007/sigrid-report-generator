@@ -1470,8 +1470,9 @@ class TestMaintainabilityPortfolioData:
 
     def setup_method(self):
         """Clean up portfolio context before each test."""
-        portfolio_filters._team = None
-        portfolio_filters._division = None
+        portfolio_filters._filter_state.update(
+            {k: None for k in portfolio_filters.FILTER_CONFIGURATION}
+        )
 
         # Clear all cached properties
         cache_attrs = ["data", "metadata", "_statistics", "period", "system_names"]
@@ -1480,8 +1481,9 @@ class TestMaintainabilityPortfolioData:
 
     def teardown_method(self):
         """Clean up portfolio context and cached data after each test."""
-        portfolio_filters._team = None
-        portfolio_filters._division = None
+        portfolio_filters._filter_state.update(
+            {k: None for k in portfolio_filters.FILTER_CONFIGURATION}
+        )
 
         # Clear all cached properties
         cache_attrs = ["data", "metadata", "_statistics", "period", "system_names"]
