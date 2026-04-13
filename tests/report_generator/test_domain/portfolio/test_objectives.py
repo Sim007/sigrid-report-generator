@@ -145,3 +145,90 @@ class TestObjectivesData:
             evaluations, None, ObjectiveStatus.IMPROVED
         )
         assert abs(improved_percentage - 33.333333) < 0.01
+
+    @patch("report_generator.generator.domain.portfolio.objectives.sigrid_api")
+    def test_objectives_coverage_no_systems(self, mock_api):
+        """Return correct result when portfolio is empty."""
+        objectives_data.capabilities = [
+            "MAINTAINABILITY",
+            "ARCHITECTURE_QUALITY",
+            "OPEN_SOURCE_HEALTH",
+            "SECURITY",
+        ]
+
+        mock_api.get_objectives_evaluation.return_value = {"systems": []}
+
+        result = objectives_data.objectives_coverage
+
+        # All values should be set to 0
+        assert result["TOTAL"] == 0
+        assert result["ALL_CAPABILITIES"] == 0
+        for capability in objectives_data.capabilities:
+            assert result[capability] == 0
+
+    @patch("report_generator.generator.domain.portfolio.objectives.sigrid_api")
+    def test_objectives_coverage_all_capabilities(self, mock_api):
+        """All systems have objectives set for all capabilities."""
+        objectives_data.capabilities = [
+            "MAINTAINABILITY",
+            "OPEN_SOURCE_HEALTH",
+        ]
+
+        mock_api.get_objectives_evaluation.return_value = {
+            "systems": [
+                {
+                    "objectives": [
+                        {"feature": "MAINTAINABILITY"},
+                        {"feature": "OPEN_SOURCE_HEALTH"},
+                    ],
+                    "systemName": "sys1",
+                },
+                {
+                    "objectives": [
+                        {"feature": "MAINTAINABILITY"},
+                        {"feature": "OPEN_SOURCE_HEALTH"},
+                    ],
+                    "systemName": "sys2",
+                },
+            ]
+        }
+
+        result = objectives_data.objectives_coverage
+
+        # Every capability appears twice
+        assert result["TOTAL"] == 2
+        assert result["ALL_CAPABILITIES"] == 2
+        for capability in objectives_data.capabilities:
+            assert result[capability] == 2
+
+    @patch("report_generator.generator.domain.portfolio.objectives.sigrid_api")
+    def test_objectives_coverage_mixed_capabilities(self, mock_api):
+        """Mixed systems with partial objectives coverage."""
+        objectives_data.capabilities = [
+            "MAINTAINABILITY",
+            "OPEN_SOURCE_HEALTH",
+        ]
+
+        mock_api.get_objectives_evaluation.return_value = {
+            "systems": [
+                {
+                    "objectives": [
+                        {"feature": "MAINTAINABILITY"},
+                    ],
+                    "systemName": "sys1",
+                },
+                {
+                    "objectives": [
+                        {"feature": "OPEN_SOURCE_HEALTH"},
+                    ],
+                    "systemName": "sys2",
+                },
+            ]
+        }
+
+        result = objectives_data.objectives_coverage
+
+        assert result["TOTAL"] == 2
+        assert result["ALL_CAPABILITIES"] == 0
+        for capability in objectives_data.capabilities:
+            assert result[capability] == 1

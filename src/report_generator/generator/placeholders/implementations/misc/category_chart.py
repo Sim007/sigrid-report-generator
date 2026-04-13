@@ -571,12 +571,12 @@ class ObjectivesCoverageChartPlaceholder(_AbstractCategoryChartPlaceholder):
     def labels(cls):
         return [
             capability.title().replace("_", " ")
-            for capability in sigrid_hygiene_portfolio_data.objectives_coverage.keys()
+            for capability in objectives_data.objectives_coverage.keys()
         ]
 
     @classmethod
     def series(cls):
-        return [list(sigrid_hygiene_portfolio_data.objectives_coverage.values())]
+        return [list(objectives_data.objectives_coverage.values())]
 
     @classmethod
     def axis_label(cls):
