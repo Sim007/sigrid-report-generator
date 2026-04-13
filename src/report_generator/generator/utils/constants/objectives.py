@@ -13,8 +13,8 @@
 #  limitations under the License.
 
 CAPABILITIES = [
-    "MAINTAINABILITY",
     "ARCHITECTURE_QUALITY",
+    "MAINTAINABILITY"
     "OPEN_SOURCE_HEALTH",
     "SECURITY",
 ]
