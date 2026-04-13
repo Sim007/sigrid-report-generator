@@ -137,6 +137,12 @@ class TestPortfolioArguments:
 
         assert portfolio_filters._filter_state["team"] is None
 
+    def test_set_context_accepts_hyphenated_values_for_mapped_filters(self):
+        """Help text advertises hyphenated values; validation must accept them too."""
+        set_context(deployment=["public-facing"])
+
+        assert portfolio_filters._filter_state["deployment"] == ["PUBLIC_FACING"]
+
     # Filter Checking Tests
 
     def test_are_filters_set_returns_false_when_no_filters(self):

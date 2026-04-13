@@ -97,7 +97,7 @@ def validate_values(values: list[str], allowed_values: set[str], field: str) -> 
 
 
 def process_values(values, mapping, field):
-    processed_values = [x.upper() for x in values]
+    processed_values = [x.upper().replace("-", "_") for x in values]
     validate_values(values=processed_values, allowed_values=mapping.keys(), field=field)
     return processed_values
 
