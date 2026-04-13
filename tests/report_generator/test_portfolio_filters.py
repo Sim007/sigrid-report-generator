@@ -120,6 +120,23 @@ class TestPortfolioArguments:
         assert portfolio_filters._filter_state["team"] == ["TeamA", "TeamB"]
         assert portfolio_filters._filter_state["division"] == ["DivisionX"]
 
+    def test_set_context_raises_on_unknown_filter(self):
+        """Test that set_context raises ValueError for unknown filter names."""
+        with pytest.raises(ValueError, match="Unknown filter"):
+            set_context(unknown_filter=["value"])
+
+    def test_set_context_raises_lists_allowed_filters(self):
+        """Test that the ValueError message lists the allowed filter names."""
+        with pytest.raises(ValueError, match="team"):
+            set_context(bad=["x"])
+
+    def test_set_context_does_not_set_partial_state_on_error(self):
+        """Test that no filter state is mutated when an unknown filter is passed."""
+        with pytest.raises(ValueError):
+            set_context(team=["TeamA"], unknown_filter=["value"])
+
+        assert portfolio_filters._filter_state["team"] is None
+
     # Filter Checking Tests
 
     def test_are_filters_set_returns_false_when_no_filters(self):

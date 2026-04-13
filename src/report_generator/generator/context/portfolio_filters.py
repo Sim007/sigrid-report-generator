@@ -119,6 +119,12 @@ def _process_and_set_filter(filter_name: str, value: Optional[list[str]]) -> Non
 
 
 def set_context(**filters: Optional[list[str]]) -> None:
+    unknown = filters.keys() - FILTER_CONFIGURATION.keys()
+    if unknown:
+        allowed = ", ".join(sorted(FILTER_CONFIGURATION.keys()))
+        raise ValueError(
+            f"Unknown filter(s): {', '.join(sorted(unknown))}. Allowed: {allowed}"
+        )
     for filter_name, value in filters.items():
         _process_and_set_filter(filter_name, value)
 
