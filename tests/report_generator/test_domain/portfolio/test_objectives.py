@@ -14,7 +14,7 @@
 
 from unittest.mock import patch
 
-from report_generator.generator.context import portfolio_filters
+from report_generator.generator.context.portfolio_filters import reset_context
 from report_generator.generator.domain.portfolio.objectives import (
     ObjectivesData,
     ObjectiveStatus,
@@ -27,9 +27,7 @@ class TestObjectivesData:
 
     def teardown_method(self):
         """Clean up portfolio context and cached data after each test."""
-        portfolio_filters._filter_state.update(
-            {k: None for k in portfolio_filters.FILTER_CONFIGURATION}
-        )
+        reset_context()
 
         cache_attrs = [
             "periods",

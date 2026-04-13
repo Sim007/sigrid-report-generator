@@ -123,6 +123,10 @@ def set_context(**filters: Optional[list[str]]) -> None:
         _process_and_set_filter(filter_name, value)
 
 
+def reset_context() -> None:
+    _filter_state.update({k: None for k in FILTER_CONFIGURATION})
+
+
 def _build_help(filter_name: str, mapping: Optional[dict]) -> str:
     flag = f"--{filter_name.replace('_', '-')}"
     example_flag = flag
@@ -150,7 +154,7 @@ def portfolio_arguments_command():
 
 def _make_filter_wrapper(func):
     def wrapper(*args, **kwargs):
-        _filter_state.update({k: None for k in FILTER_CONFIGURATION})
+        reset_context()
         filter_kwargs = {
             k: kwargs.pop(k) for k in list(FILTER_CONFIGURATION) if k in kwargs
         }

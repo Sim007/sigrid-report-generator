@@ -14,7 +14,7 @@
 
 from unittest.mock import patch
 
-from report_generator.generator.context import portfolio_filters
+from report_generator.generator.context.portfolio_filters import reset_context
 from report_generator.generator.domain.portfolio.security_dashboard_findings_portfolio import (
     SecurityDashboardFindingsPortfolioData,
     security_dashboard_findings_portfolio_data,
@@ -1112,9 +1112,7 @@ class TestSecurityPortfolioData:
 
     def teardown_method(self):
         """Clean up portfolio context and cached data after each test."""
-        portfolio_filters._filter_state.update(
-            {k: None for k in portfolio_filters.FILTER_CONFIGURATION}
-        )
+        reset_context()
 
         cache_attrs = ["data", "metadata", "period", "system_names"]
         for attr in cache_attrs:
@@ -1163,9 +1161,7 @@ class TestSecurityDashboardFindingsPortfolioData:
 
     def teardown_method(self):
         """Clean up portfolio context and cached data after each test."""
-        portfolio_filters._filter_state.update(
-            {k: None for k in portfolio_filters.FILTER_CONFIGURATION}
-        )
+        reset_context()
 
         cache_attrs = ["data", "metadata", "system_names"]
         for attr in cache_attrs:
@@ -1226,9 +1222,7 @@ class TestSecurityDashboardResolutionTimesPortfolioData:
 
     def teardown_method(self):
         """Clean up portfolio context and cached data after each test."""
-        portfolio_filters._filter_state.update(
-            {k: None for k in portfolio_filters.FILTER_CONFIGURATION}
-        )
+        reset_context()
 
         cache_attrs = ["data", "metadata", "system_names"]
         for attr in cache_attrs:

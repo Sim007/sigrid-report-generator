@@ -25,6 +25,7 @@ from report_generator.generator.context.portfolio_filters import (
     _find_system_metadata,
     _include,
     filter_data_on_portfolio_arguments,
+    reset_context,
     set_context,
 )
 
@@ -94,7 +95,7 @@ class TestPortfolioArguments:
 
     def teardown_method(self):
         """Reset portfolio context after each test."""
-        portfolio_filters._filter_state.update({k: None for k in FILTER_CONFIGURATION})
+        reset_context()
 
     # Context Management Tests
 
