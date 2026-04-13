@@ -158,7 +158,7 @@ class ObjectivesData:
     def filter_system_evaluations(evaluation, system_names):
         return [system for system in evaluation if system["systemName"] in system_names]
 
-    def _compute_list_objectives_dict(self):
+    def _compute_list_system_objectives(self):
         portfolio_objectives = self.objectives_evaluation_status
         return [
             {
@@ -171,8 +171,8 @@ class ObjectivesData:
 
     @cached_property
     def objectives_coverage(self):
-        list_system_dict = self._compute_list_objectives_dict()
-        total_systems = len(list_system_dict)
+        list_system_obj = self._compute_list_system_objectives()
+        total_systems = len(list_system_obj)
 
         if total_systems == 0:
             return {
@@ -183,7 +183,7 @@ class ObjectivesData:
 
         all_capabilities = sum(
             1
-            for system in list_system_dict
+            for system in list_system_obj
             if all(capability in system for capability in self.capabilities)
         )
 
@@ -192,7 +192,7 @@ class ObjectivesData:
             "ALL_CAPABILITIES": all_capabilities,
             **{
                 capability: (
-                    sum(1 for system in list_system_dict if capability in system)
+                    sum(1 for system in list_system_obj if capability in system)
                 )
                 for capability in self.capabilities
             },
