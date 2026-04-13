@@ -27,7 +27,7 @@ class TestObjectivesData:
 
     def setup_method(self):
         """Store the original capabilities so tests do not leak state."""
-        self._original_capabilities = list(objectives_data.capabilities)
+        self._original_capabilities = objectives_data.capabilities
 
     def teardown_method(self):
         """Clean up portfolio context and cached data after each test."""
