@@ -13,7 +13,7 @@
 #  limitations under the License.
 
 from functools import wraps
-from typing import Optional
+from typing import Callable, NamedTuple, Optional
 
 import click
 
@@ -28,69 +28,66 @@ from report_generator.generator.utils.constants.metadata import (
     METADATA_TECHNOLOGY_CATEGORY_MAPPING,
 )
 
-_team: Optional[list[str]] = None
-_division: Optional[list[str]] = None
-_lifecycle: Optional[list[str]] = None
-_deployment: Optional[list[str]] = None
-_business_criticality: Optional[list[str]] = None
-_distribution: Optional[list[str]] = None
-_application_type: Optional[list[str]] = None
-_target_industry: Optional[list[str]] = None
-_technology_category: Optional[list[str]] = None
-_main_technology: Optional[list[str]] = None
-_supplier: Optional[list[str]] = None
 
-FILTER_CONFIGURATION = {
-    "team": ("_team", None, None),
-    "division": ("_division", None, None),
-    "lifecycle": ("_lifecycle", METADATA_LIFECYCLE_MAPPING, "Lifecycle"),
-    "deployment": ("_deployment", METADATA_DEPLOYMENT_MAPPING, "Deployment"),
-    "business_criticality": (
-        "_business_criticality",
+class FilterSpec(NamedTuple):
+    value_mapping: Optional[
+        dict
+    ]  # Allowed values mapping (key → display label); None means free-form input
+    field_label: Optional[
+        str
+    ]  # Human-readable field name used in validation error messages
+    metadata_key: str  # Key in the portfolio metadata JSON to match against
+    transform: Optional[
+        Callable
+    ]  # Normalisation applied to the metadata value before comparison
+
+
+FILTER_CONFIGURATION: dict[str, FilterSpec] = {
+    "team": FilterSpec(None, None, "teamNames", None),
+    "division": FilterSpec(None, None, "divisionName", None),
+    "lifecycle": FilterSpec(
+        METADATA_LIFECYCLE_MAPPING, "Lifecycle", "lifecyclePhase", str.upper
+    ),
+    "deployment": FilterSpec(
+        METADATA_DEPLOYMENT_MAPPING,
+        "Deployment",
+        "deploymentType",
+        lambda x: x.upper().replace("-", "_"),
+    ),
+    "business_criticality": FilterSpec(
         METADATA_BUSINESS_CRITICALITY_MAPPING,
         "Business criticality",
+        "businessCriticality",
+        str.upper,
     ),
-    "distribution": ("_distribution", METADATA_DISTRIBUTION_MAPPING, "Distribution"),
-    "application_type": (
-        "_application_type",
-        METADATA_APPLICATION_TYPE_MAPPING,
-        "Application type",
-    ),
-    "target_industry": (
-        "_target_industry",
-        METADATA_TARGET_INDUSTRY_MAPPING,
-        "Target industry",
-    ),
-    "technology_category": (
-        "_technology_category",
-        METADATA_TECHNOLOGY_CATEGORY_MAPPING,
-        "Technology category",
-    ),
-    "main_technology": ("_main_technology", None, None),
-    "supplier": ("_supplier", None, None),
-}
-
-METADATA_FILTER_CHECKS = [
-    ("_team", "teamNames", None),
-    ("_division", "divisionName", None),
-    ("_lifecycle", "lifecyclePhase", str.upper),
-    ("_deployment", "deploymentType", lambda x: x.upper().replace("-", "_")),
-    ("_business_criticality", "businessCriticality", str.upper),
-    (
-        "_distribution",
+    "distribution": FilterSpec(
+        METADATA_DISTRIBUTION_MAPPING,
+        "Distribution",
         "softwareDistributionStrategy",
         lambda x: x.upper().replace("-", "_"),
     ),
-    ("_application_type", "applicationType", lambda x: x.upper().replace("-", "_")),
-    ("_target_industry", "targetIndustry", str.upper),
-    (
-        "_technology_category",
+    "application_type": FilterSpec(
+        METADATA_APPLICATION_TYPE_MAPPING,
+        "Application type",
+        "applicationType",
+        lambda x: x.upper().replace("-", "_"),
+    ),
+    "target_industry": FilterSpec(
+        METADATA_TARGET_INDUSTRY_MAPPING, "Target industry", "targetIndustry", str.upper
+    ),
+    "technology_category": FilterSpec(
+        METADATA_TECHNOLOGY_CATEGORY_MAPPING,
+        "Technology category",
         "technologyCategory",
         lambda x: x.upper().replace("-", "_"),
     ),
-    ("_main_technology", "mainTechnology", str.lower),
-    ("_supplier", "supplierNames", None),
-]
+    "main_technology": FilterSpec(None, None, "mainTechnology", str.lower),
+    "supplier": FilterSpec(None, None, "supplierNames", None),
+}
+
+_filter_state: dict[str, Optional[list[str]]] = {
+    name: None for name in FILTER_CONFIGURATION
+}
 
 
 def validate_values(values: list[str], allowed_values: set[str], field: str) -> None:
@@ -109,160 +106,66 @@ def _process_and_set_filter(filter_name: str, value: Optional[list[str]]) -> Non
     if not value:
         return
 
-    global_var_name, mapping, field_name = FILTER_CONFIGURATION[filter_name]
+    spec = FILTER_CONFIGURATION[filter_name]
 
-    if mapping:
+    if spec.value_mapping:
         processed_value = process_values(
-            values=value, mapping=mapping, field=field_name
+            values=value, mapping=spec.value_mapping, field=spec.field_label
         )
     else:
         processed_value = list(value)
 
-    globals()[global_var_name] = processed_value
+    _filter_state[filter_name] = processed_value
 
 
-def set_context(
-    team: Optional[list[str]] = None,
-    division: Optional[list[str]] = None,
-    lifecycle: Optional[list[str]] = None,
-    deployment: Optional[list[str]] = None,
-    business_criticality: Optional[list[str]] = None,
-    distribution: Optional[list[str]] = None,
-    application_type: Optional[list[str]] = None,
-    target_industry: Optional[list[str]] = None,
-    technology_category: Optional[list[str]] = None,
-    main_technology: Optional[list[str]] = None,
-    supplier: Optional[list[str]] = None,
-) -> None:
-    filters = {
-        "team": team,
-        "division": division,
-        "lifecycle": lifecycle,
-        "deployment": deployment,
-        "business_criticality": business_criticality,
-        "distribution": distribution,
-        "application_type": application_type,
-        "target_industry": target_industry,
-        "technology_category": technology_category,
-        "main_technology": main_technology,
-        "supplier": supplier,
-    }
-
+def set_context(**filters: Optional[list[str]]) -> None:
     for filter_name, value in filters.items():
         _process_and_set_filter(filter_name, value)
 
 
+def _build_help(filter_name: str, mapping: Optional[dict]) -> str:
+    flag = f"--{filter_name.replace('_', '-')}"
+    example_flag = flag
+    base = f"[filter] {filter_name.replace('_', ' ').title()} filter, as displayed in Sigrid (multiple values need separate {flag} flags, ie.: {example_flag} aap {example_flag} noot)"
+    if mapping:
+        allowed = ", ".join(k.lower().replace("_", "-") for k in mapping)
+        return f"{base}. Allowed values: {allowed}"
+    return base
+
+
 def portfolio_arguments_command():
     def decorator(func):
-        @click.option(
-            "--team",
-            multiple=True,
-            help="[filter] Team name filter, as displayed in Sigrid (multiple values need separate --team flags, ie.: --team aap --team noot)",
-        )
-        @click.option(
-            "--division",
-            multiple=True,
-            help="[filter] Division name filter, as displayed in Sigrid (multiple values need separate --division flags, ie.: --division aap --division noot)",
-        )
-        @click.option(
-            "--lifecycle",
-            multiple=True,
-            help=f"[filter] Lifecycle filter, as displayed in Sigrid (multiple values need separate --lifecycle flags, ie.: --lifecycle initial --lifecycle evolution). Allowed values: {', '.join([x.lower() for x in METADATA_LIFECYCLE_MAPPING.keys()])}",
-        )
-        @click.option(
-            "--deployment",
-            multiple=True,
-            help=f"[filter] Deployment filter, as displayed in Sigrid (multiple values need separate --deployment flags, ie.: --deployment public-facing --deployment connected). Allowed values: {', '.join([x.lower().replace('_', '-') for x in METADATA_DEPLOYMENT_MAPPING.keys()])}",
-        )
-        @click.option(
-            "--business-criticality",
-            multiple=True,
-            help=f"[filter] Business criticality filter, as displayed in Sigrid (multiple values need separate --business-criticality flags, ie.: --business-criticality critical --business-criticality high). Allowed values: {', '.join([x.lower() for x in METADATA_BUSINESS_CRITICALITY_MAPPING.keys()])}",
-        )
-        @click.option(
-            "--distribution",
-            multiple=True,
-            help=f"[filter] Distribution filter, as displayed in Sigrid (multiple values need separate --distribution flags, ie.: --distribution not-distributed --distribution connected). Allowed values: {', '.join([x.lower().replace('_', '-') for x in METADATA_DISTRIBUTION_MAPPING.keys()])}",
-        )
-        @click.option(
-            "--application-type",
-            multiple=True,
-            help=f"[filter] Application type filter, as displayed in Sigrid (multiple values need separate --application-type flags, ie.: --application-type functional-applications --application-type case-management). Allowed values: {', '.join([x.lower().replace('_', '-') for x in METADATA_APPLICATION_TYPE_MAPPING.keys()])}",
-        )
-        @click.option(
-            "--target-industry",
-            multiple=True,
-            help=f"[filter] Target industry filter, as displayed in Sigrid (multiple values need separate --target-industry flags, ie.: --target-industry ICD0500 --target-industry SIG1100). Allowed values: {', '.join([x.lower() for x in METADATA_TARGET_INDUSTRY_MAPPING.keys()])}",
-        )
-        @click.option(
-            "--technology-category",
-            multiple=True,
-            help=f"[filter] Technology category filter, as displayed in Sigrid (multiple values need separate --technology-category flags, ie.: --technology-category aggregate --technology-category web). Allowed values: {', '.join([x.lower().replace('_', '-') for x in METADATA_TECHNOLOGY_CATEGORY_MAPPING.keys()])}",
-        )
-        @click.option(
-            "--main-technology",
-            multiple=True,
-            help="[filter] Main technology filter, as displayed in Sigrid (multiple values need separate --main-technology flags, ie.: --main-technology java --main-technology python)",
-        )
-        @click.option(
-            "--supplier",
-            multiple=True,
-            help="[filter] Supplier name filter, as displayed in Sigrid (multiple values need separate --supplier flags, ie.: --supplier acme --supplier techcorp)",
-        )
-        @wraps(func)
-        def wrapper(
-            team,
-            division,
-            lifecycle,
-            deployment,
-            business_criticality,
-            distribution,
-            application_type,
-            target_industry,
-            technology_category,
-            main_technology,
-            supplier,
-            *args,
-            **kwargs,
-        ):
-            set_context(
-                team=team,
-                division=division,
-                lifecycle=lifecycle,
-                deployment=deployment,
-                business_criticality=business_criticality,
-                distribution=distribution,
-                application_type=application_type,
-                target_industry=target_industry,
-                technology_category=technology_category,
-                main_technology=main_technology,
-                supplier=supplier,
-            )
-            return func(*args, **kwargs)
-
-        return wrapper
+        wrapped = wraps(func)(_make_filter_wrapper(func))
+        for filter_name, spec in reversed(FILTER_CONFIGURATION.items()):
+            flag = f"--{filter_name.replace('_', '-')}"
+            wrapped = click.option(
+                flag,
+                multiple=True,
+                help=_build_help(filter_name, spec.value_mapping),
+            )(wrapped)
+        return wrapped
 
     return decorator
 
 
+def _make_filter_wrapper(func):
+    def wrapper(*args, **kwargs):
+        _filter_state.update({k: None for k in FILTER_CONFIGURATION})
+        filter_kwargs = {
+            k: kwargs.pop(k) for k in list(FILTER_CONFIGURATION) if k in kwargs
+        }
+        set_context(**filter_kwargs)
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 def _raise_no_systems_found_error():
     """Raise an error when no systems match the specified filters."""
-    active_filters = [
-        (_team, "--team"),
-        (_division, "--division"),
-        (_lifecycle, "--lifecycle"),
-        (_deployment, "--deployment"),
-        (_business_criticality, "--business-criticality"),
-        (_distribution, "--distribution"),
-        (_application_type, "--application-type"),
-        (_target_industry, "--target-industry"),
-        (_technology_category, "--technology-category"),
-        (_main_technology, "--main-technology"),
-        (_supplier, "--supplier"),
-    ]
-
     filter_desc = [
-        f"{flag}: {', '.join(values)}" for values, flag in active_filters if values
+        f"--{name.replace('_', '-')}: {', '.join(values)}"
+        for name, values in _filter_state.items()
+        if values
     ]
 
     error_msg = (
@@ -365,49 +268,23 @@ def _check_filter_match(
 
 
 def _include(system_name, portfolio_metadata):
-    global \
-        _team, \
-        _division, \
-        _lifecycle, \
-        _deployment, \
-        _business_criticality, \
-        _distribution, \
-        _application_type, \
-        _target_industry, \
-        _technology_category, \
-        _main_technology, \
-        _supplier
     md = _find_system_metadata(
         system_name=system_name, portfolio_metadata=portfolio_metadata
     )
     if md is None:
         return False
 
-    for global_var_name, metadata_key, transform in METADATA_FILTER_CHECKS:
-        filter_value = globals()[global_var_name]
-        actual_value = md.get(metadata_key)
-        if not _check_filter_match(filter_value, actual_value, transform):
+    for filter_name, spec in FILTER_CONFIGURATION.items():
+        filter_value = _filter_state[filter_name]
+        actual_value = md.get(spec.metadata_key)
+        if not _check_filter_match(filter_value, actual_value, spec.transform):
             return False
 
     return True
 
 
-def _are_filters_set():
-    return any(
-        [
-            _team is not None,
-            _division is not None,
-            _lifecycle is not None,
-            _deployment is not None,
-            _business_criticality is not None,
-            _distribution is not None,
-            _application_type is not None,
-            _target_industry is not None,
-            _technology_category is not None,
-            _main_technology is not None,
-            _supplier is not None,
-        ]
-    )
+def _are_filters_set() -> bool:
+    return any(v is not None for v in _filter_state.values())
 
 
 def _find_system_metadata(system_name, portfolio_metadata):
