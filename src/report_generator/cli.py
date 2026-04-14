@@ -35,26 +35,24 @@ def _normalize_name(ctx, param, value):
     return value.lower() if value else value
 
 
-def _validate_system_requirement(ctx, _, value):
-    value = value.lower() if value else value
-    layout = ctx.params.get("layout")
+def _validate_system_requirement(system: Optional[str], layout: Optional[str], template) -> None:
+    if template:
+        return
 
     system_required = layout in presets.SYSTEM_LEVEL_PRESETS
-    system_provided = value is not None
+    system_provided = system is not None
 
     if system_required and not system_provided:
         system_presets = ", ".join(sorted(presets.SYSTEM_LEVEL_PRESETS))
-        raise click.BadParameter(
+        raise click.UsageError(
             f"System is required when using layout '{layout}' "
             f"(required for: {system_presets})"
         )
-    elif layout is not None and not system_required and system_provided:
-        raise click.BadParameter(
+    if not system_required and system_provided:
+        raise click.UsageError(
             f"System is not allowed when using layout '{layout}' "
             f"(only required for: {', '.join(presets.SYSTEM_LEVEL_PRESETS)})"
         )
-
-    return value
 
 
 def _validate_layout_or_template(ctx, param, value):
@@ -82,7 +80,7 @@ def _validate_layout_or_template(ctx, param, value):
     "-s",
     "--system",
     required=False,
-    callback=_validate_system_requirement,
+    callback=_normalize_name,
     help="System name (required for: " + ", ".join(presets.SYSTEM_LEVEL_PRESETS) + ")",
 )
 @click.option(
@@ -133,6 +131,7 @@ def run(
     _, debug, customer, system, token, layout, template, start, end, out_file, api_url
 ):
     _configure_logging(debug)
+    _validate_system_requirement(system, layout, template)
     _configure_api(customer, system, token, (start, end), api_url)
     _record_usage_statistics(layout, customer)
 
