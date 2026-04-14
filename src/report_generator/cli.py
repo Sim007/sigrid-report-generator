@@ -36,11 +36,8 @@ def _normalize_name(ctx, param, value):
 
 
 def _validate_system_requirement(
-    system: Optional[str], layout: Optional[str], template
+    system: Optional[str], layout: Optional[str]
 ) -> None:
-    if template:
-        return
-
     system_required = layout in presets.SYSTEM_LEVEL_PRESETS
     system_provided = system is not None
 
@@ -50,7 +47,7 @@ def _validate_system_requirement(
             f"System is required when using layout '{layout}' "
             f"(required for: {system_presets})"
         )
-    if not system_required and system_provided:
+    elif layout is not None and not system_required and system_provided:
         raise click.UsageError(
             f"System is not allowed when using layout '{layout}' "
             f"(only required for: {', '.join(presets.SYSTEM_LEVEL_PRESETS)})"
@@ -133,7 +130,8 @@ def run(
     _, debug, customer, system, token, layout, template, start, end, out_file, api_url
 ):
     _configure_logging(debug)
-    _validate_system_requirement(system, layout, template)
+    if not template:
+        _validate_system_requirement(system, layout)
     _configure_api(customer, system, token, (start, end), api_url)
     _record_usage_statistics(layout, customer)
 
