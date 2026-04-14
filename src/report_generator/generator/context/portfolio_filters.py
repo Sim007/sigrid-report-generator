@@ -188,6 +188,11 @@ def _raise_no_systems_found_error():
     )
     raise click.ClickException(error_msg)
 
+def _check_if_filters_correct(portfolio_metadata):
+    filtered_pmd = [s for s in portfolio_metadata if _include(s["systemName"], portfolio_metadata)]
+    if not filtered_pmd:
+        _raise_no_systems_found_error()
+
 
 def filter_data_on_portfolio_arguments(data_tag=None, system_tag=None):
     """
@@ -225,13 +230,13 @@ def filter_data_on_portfolio_arguments(data_tag=None, system_tag=None):
                     system_tag=system_tag,
                 )
                 if not filtered_data[data_tag]:
-                    _raise_no_systems_found_error()
+                    _check_if_filters_correct(pmd)
             else:
                 filtered_data = _without_data_tag(
                     data=data, portfolio_metadata=pmd, system_tag=system_tag
                 )
                 if not filtered_data:
-                    _raise_no_systems_found_error()
+                    _check_if_filters_correct(pmd)
 
             return filtered_data
 
