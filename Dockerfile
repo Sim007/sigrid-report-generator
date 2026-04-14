@@ -10,7 +10,11 @@ RUN apk add --no-cache \
             python3-dev \
     && adduser -S sigrid \
     && pip install --no-cache-dir /sources/report-generator \
-    && rm -rf /sources
+    && rm -rf /sources \
+    && apk del build-base \
+               git \
+               graphviz \
+               openldap-dev
 
 USER sigrid
 WORKDIR /home/sigrid
