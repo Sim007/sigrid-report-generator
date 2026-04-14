@@ -35,7 +35,9 @@ def _normalize_name(ctx, param, value):
     return value.lower() if value else value
 
 
-def _validate_system_requirement(system: Optional[str], layout: Optional[str], template) -> None:
+def _validate_system_requirement(
+    system: Optional[str], layout: Optional[str], template
+) -> None:
     if template:
         return
 
