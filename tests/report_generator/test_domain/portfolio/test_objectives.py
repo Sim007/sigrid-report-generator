@@ -25,6 +25,10 @@ from report_generator.generator.domain.portfolio.objectives import (
 class TestObjectivesData:
     """Test cases for ObjectivesData model."""
 
+    def setup_method(self):
+        """Store the original capabilities so tests do not leak state."""
+        self._original_capabilities = objectives_data.capabilities
+
     def teardown_method(self):
         """Clean up portfolio context and cached data after each test."""
         reset_context()
@@ -35,9 +39,12 @@ class TestObjectivesData:
             "objectives_evaluation_trend",
             "objectives_evaluation_status",
             "teams",
+            "objectives_coverage",
         ]
         for attr in cache_attrs:
             objectives_data.__dict__.pop(attr, None)
+
+        objectives_data.capabilities = self._original_capabilities
 
     @patch("report_generator.generator.domain.portfolio.objectives.sigrid_api")
     def test_determine_system_status_met(self, mock_sigrid_api):
@@ -144,3 +151,93 @@ class TestObjectivesData:
             evaluations, None, ObjectiveStatus.IMPROVED
         )
         assert abs(improved_percentage - 33.333333) < 0.01
+
+    @patch("report_generator.generator.domain.portfolio.objectives.sigrid_api")
+    def test_objectives_coverage_no_systems(self, mock_sigrid_api):
+        """Return correct result when portfolio is empty."""
+        objectives_data.capabilities = [
+            "MAINTAINABILITY",
+            "ARCHITECTURE_QUALITY",
+            "OPEN_SOURCE_HEALTH",
+            "SECURITY",
+        ]
+
+        mock_sigrid_api.get_period.return_value = ("2026-03-13", "2026-04-13")
+        mock_sigrid_api.get_objectives_evaluation.return_value = {"systems": []}
+
+        result = objectives_data.objectives_coverage
+
+        # All values should be set to 0
+        assert result["TOTAL"] == 0
+        assert result["ALL_CAPABILITIES"] == 0
+        for capability in objectives_data.capabilities:
+            assert result[capability] == 0
+
+    @patch("report_generator.generator.domain.portfolio.objectives.sigrid_api")
+    def test_objectives_coverage_all_capabilities(self, mock_sigrid_api):
+        """All systems have objectives set for all capabilities."""
+        objectives_data.capabilities = [
+            "MAINTAINABILITY",
+            "OPEN_SOURCE_HEALTH",
+        ]
+
+        mock_sigrid_api.get_period.return_value = ("2026-03-13", "2026-04-13")
+        mock_sigrid_api.get_objectives_evaluation.return_value = {
+            "systems": [
+                {
+                    "objectives": [
+                        {"feature": "MAINTAINABILITY"},
+                        {"feature": "OPEN_SOURCE_HEALTH"},
+                    ],
+                    "systemName": "sys1",
+                },
+                {
+                    "objectives": [
+                        {"feature": "MAINTAINABILITY"},
+                        {"feature": "OPEN_SOURCE_HEALTH"},
+                    ],
+                    "systemName": "sys2",
+                },
+            ]
+        }
+
+        result = objectives_data.objectives_coverage
+
+        # Every capability appears twice
+        assert result["TOTAL"] == 2
+        assert result["ALL_CAPABILITIES"] == 2
+        for capability in objectives_data.capabilities:
+            assert result[capability] == 2
+
+    @patch("report_generator.generator.domain.portfolio.objectives.sigrid_api")
+    def test_objectives_coverage_mixed_capabilities(self, mock_sigrid_api):
+        """Mixed systems with partial objectives coverage."""
+        objectives_data.capabilities = [
+            "MAINTAINABILITY",
+            "OPEN_SOURCE_HEALTH",
+        ]
+
+        mock_sigrid_api.get_period.return_value = ("2026-03-13", "2026-04-13")
+        mock_sigrid_api.get_objectives_evaluation.return_value = {
+            "systems": [
+                {
+                    "objectives": [
+                        {"feature": "MAINTAINABILITY"},
+                    ],
+                    "systemName": "sys1",
+                },
+                {
+                    "objectives": [
+                        {"feature": "OPEN_SOURCE_HEALTH"},
+                    ],
+                    "systemName": "sys2",
+                },
+            ]
+        }
+
+        result = objectives_data.objectives_coverage
+
+        assert result["TOTAL"] == 2
+        assert result["ALL_CAPABILITIES"] == 0
+        for capability in objectives_data.capabilities:
+            assert result[capability] == 1

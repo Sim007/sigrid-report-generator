@@ -20,6 +20,7 @@ from report_generator.generator.context import sigrid_api
 from report_generator.generator.context.portfolio_filters import (
     filter_data_on_portfolio_arguments,
 )
+from report_generator.generator.utils.constants.objectives import CAPABILITIES
 from report_generator.generator.utils.time_series import Period
 
 
@@ -33,12 +34,7 @@ class ObjectiveStatus(Enum):
 
 class ObjectivesData:
     def __init__(self):
-        self.capabilities = [
-            "ARCHITECTURE_QUALITY",
-            "MAINTAINABILITY",
-            "OPEN_SOURCE_HEALTH",
-            "SECURITY",
-        ]
+        self.capabilities = CAPABILITIES
 
     @cached_property
     def periods(self):
@@ -161,6 +157,46 @@ class ObjectivesData:
     @staticmethod
     def filter_system_evaluations(evaluation, system_names):
         return [system for system in evaluation if system["systemName"] in system_names]
+
+    def _compute_list_system_objectives(self):
+        portfolio_objectives = self.objectives_evaluation_status
+        return [
+            {
+                obj["feature"]
+                for obj in system["objectives"]
+                if obj["feature"] in self.capabilities
+            }
+            for system in portfolio_objectives
+        ]
+
+    @cached_property
+    def objectives_coverage(self):
+        list_system_obj = self._compute_list_system_objectives()
+        total_systems = len(list_system_obj)
+
+        if total_systems == 0:
+            return {
+                "TOTAL": 0,
+                "ALL_CAPABILITIES": 0,
+                **{capability: 0 for capability in self.capabilities},
+            }
+
+        all_capabilities = sum(
+            1
+            for system in list_system_obj
+            if all(capability in system for capability in self.capabilities)
+        )
+
+        return {
+            "TOTAL": total_systems,
+            "ALL_CAPABILITIES": all_capabilities,
+            **{
+                capability: (
+                    sum(1 for system in list_system_obj if capability in system)
+                )
+                for capability in self.capabilities
+            },
+        }
 
 
 objectives_data = ObjectivesData()
