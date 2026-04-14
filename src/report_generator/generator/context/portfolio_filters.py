@@ -189,11 +189,12 @@ def _raise_no_systems_found_error():
     raise click.ClickException(error_msg)
 
 
+def _include_metadata(system_metadata) -> bool:
+    return _include(system_metadata["systemName"], [system_metadata])
+
+
 def _check_if_filters_correct(portfolio_metadata):
-    filtered_pmd = [
-        s for s in portfolio_metadata if _include(s["systemName"], portfolio_metadata)
-    ]
-    if not filtered_pmd:
+    if not any(_include_metadata(s) for s in portfolio_metadata):
         _raise_no_systems_found_error()
 
 
