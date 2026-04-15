@@ -380,6 +380,25 @@ class TestPortfolioArguments:
         assert len(result["systems"]) == 1
         assert result["systems"][0]["system"] == "system2"
 
+    @patch("report_generator.generator.context.portfolio_filters.sigrid_api")
+    def test_decorator_does_not_raise_when_api_data_empty_but_filters_match_metadata(
+        self, mock_sigrid_api, mock_portfolio_metadata
+    ):
+        """Test that no error is raised when filtered API data is empty but the filters
+        still match systems in portfolio metadata (e.g. systems exist but have no data yet)."""
+        set_context(team=["TeamA"])
+        mock_sigrid_api.get_portfolio_metadata.return_value = mock_portfolio_metadata
+
+        empty_api_data = {"systems": [], "metadata": "some_metadata"}
+
+        @filter_data_on_portfolio_arguments(data_tag="systems", system_tag="system")
+        def mock_function():
+            return empty_api_data
+
+        result = mock_function()
+
+        assert result["systems"] == []
+
 
 class TestFilterConsistency:
     """Test that all filters are consistently defined across all configuration points."""

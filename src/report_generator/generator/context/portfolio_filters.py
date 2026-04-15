@@ -189,6 +189,15 @@ def _raise_no_systems_found_error():
     raise click.ClickException(error_msg)
 
 
+def _include_metadata(system_metadata) -> bool:
+    return _include(system_metadata["systemName"], [system_metadata])
+
+
+def _check_if_filters_correct(portfolio_metadata):
+    if not any(_include_metadata(s) for s in portfolio_metadata):
+        _raise_no_systems_found_error()
+
+
 def filter_data_on_portfolio_arguments(data_tag=None, system_tag=None):
     """
     This decorator integrates with the Sigrid API to apply portfolio-aware filtering logic to the data returned by the decorated function.
@@ -225,13 +234,13 @@ def filter_data_on_portfolio_arguments(data_tag=None, system_tag=None):
                     system_tag=system_tag,
                 )
                 if not filtered_data[data_tag]:
-                    _raise_no_systems_found_error()
+                    _check_if_filters_correct(pmd)
             else:
                 filtered_data = _without_data_tag(
                     data=data, portfolio_metadata=pmd, system_tag=system_tag
                 )
                 if not filtered_data:
-                    _raise_no_systems_found_error()
+                    _check_if_filters_correct(pmd)
 
             return filtered_data
 
