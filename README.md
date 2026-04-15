@@ -153,6 +153,31 @@ the results.
 For examples of custom placeholders (simple text, parameterized, multi-parameter, class-based, and fully custom),
 see [docs/custom-placeholders.md](docs/custom-placeholders.md).
 
+## Docker image
+
+A Docker image is built from this repository and pushed to Docker Hub when the `main` branch is updated.
+
+- Image name: `softwareimprovementgroup/sigrid-report-generator:latest`
+- Build platforms: `linux/amd64` and `linux/arm64`
+
+To build the Docker image locally:
+
+```
+docker build -t softwareimprovementgroup/sigrid-report-generator:latest .
+```
+
+Example of running the report generator from Docker:
+
+```
+docker run --rm \
+  -v "$(pwd)/output:/output" \
+  softwareimprovementgroup/sigrid-report-generator:latest \
+  -c <your-customer> -s <youur-system> -t <your-token> \
+  -o /output/out.pptx
+```
+`-v "$(pwd)/output:/output"` mounts the local output directory from your current working folder into the container at /output.
+This allows the generated report file (e.g. out.pptx) to be written by the container and saved directly on your host machine.
+
 ## Contributing
 
 For developer instructions (linting, testing, architecture overview), see [docs/developers.md](docs/developers.md).
