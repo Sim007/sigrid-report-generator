@@ -26,7 +26,12 @@ RUN apk add --no-cache \
         libxml2-dev
 
 WORKDIR /build
-COPY . .
+
+# Copy packaging metadata first (better cache reuse)
+COPY pyproject.toml setup.cfg setup.py README.md ./
+# Copy only the application source
+COPY src/ src/
+
 
 # Install the application and all dependencies into an isolated prefix
 RUN pip install --upgrade pip \
@@ -68,7 +73,7 @@ RUN apk add --no-cache \
         libxml2 \
         fontconfig \
         ttf-dejavu \
-    && adduser -S sigrid
+    && adduser -S -h /home/sigrid sigrid
 
 COPY --from=build /install /usr/local
 
