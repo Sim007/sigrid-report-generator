@@ -54,6 +54,14 @@ class TestCLIParameters:
         assert result.exit_code != 0
         assert "customer" in result.output.lower() or "missing" in result.output.lower()
 
+    def test_system_required_when_only_customer_provided(self):
+        """Test that CLI errors immediately when only --customer is given (default layout requires --system)."""
+        runner = CliRunner()
+        result = runner.invoke(run_cli, ["--customer", "test-customer"])
+
+        assert result.exit_code != 0
+        assert "system" in result.output.lower()
+
     @patch("report_generator.cli.presets")
     @patch("report_generator.cli.sigrid_api")
     def test_token_defaults_to_environment_variable(

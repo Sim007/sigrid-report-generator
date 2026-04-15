@@ -562,3 +562,22 @@ class UsersLastLoginChartPlaceholder(_AbstractCategoryChartPlaceholder):
     @classmethod
     def axis_label(cls):
         return "Users"
+
+
+class ObjectivesCoverageChartPlaceholder(_AbstractCategoryChartPlaceholder):
+    key = "OBJECTIVES_COVERAGE_CHART"
+
+    @classmethod
+    def labels(cls):
+        return [
+            capability.title().replace("_", " ")
+            for capability in objectives_data.objectives_coverage.keys()
+        ]
+
+    @classmethod
+    def series(cls):
+        return [list(objectives_data.objectives_coverage.values())]
+
+    @classmethod
+    def axis_label(cls):
+        return "Systems"

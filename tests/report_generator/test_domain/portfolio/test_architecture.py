@@ -14,7 +14,7 @@
 
 from unittest.mock import patch
 
-from report_generator.generator.context import portfolio_filters
+from report_generator.generator.context.portfolio_filters import reset_context
 from report_generator.generator.domain.portfolio.architecture_portfolio import (
     architecture_portfolio_data,
 )
@@ -25,13 +25,11 @@ class TestArchitecturePortfolioData:
 
     def setup_method(self):
         """Reset portfolio context before each test."""
-        portfolio_filters._team = None
-        portfolio_filters._division = None
+        reset_context()
 
     def teardown_method(self):
         """Clean up portfolio context and cached data after each test."""
-        portfolio_filters._team = None
-        portfolio_filters._division = None
+        reset_context()
 
         cache_attrs = ["data", "metadata", "period", "system_names"]
         for attr in cache_attrs:
