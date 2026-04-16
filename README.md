@@ -172,7 +172,7 @@ Example of running the report generator from Docker:
 docker run --rm \
   -v "$(pwd)/output:/output" \
   softwareimprovementgroup/sigrid-report-generator:latest \
-  -c <your-customer> -s <youur-system> -t <your-token> \
+  -c <your-customer> -s <your-system> -t <your-token> \
   -o /output/out.pptx
 ```
 `-v "$(pwd)/output:/output"` mounts the local output directory from your current working folder into the container at /output.
