@@ -29,6 +29,10 @@ jobs:
           username: softwareimprovementgroup
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set branch slug
+        if: github.ref != 'refs/heads/main'
+        run: echo "BRANCH_SLUG=$(echo "${{ github.head_ref || github.ref_name }}" | sed 's/[^a-zA-Z0-9]/-/g')" >> $GITHUB_ENV
+
       - name: Build Docker image (branch / PR validation)
         if: github.ref != 'refs/heads/main'
         uses: docker/build-push-action@v6
@@ -36,7 +40,7 @@ jobs:
           file: Dockerfile
           platforms: linux/amd64
           push: false
-          tags: softwareimprovementgroup/sigrid-report-generator:pr-${{ github.sha }}
+          tags: softwareimprovementgroup/sigrid-report-generator:branch-${{ env.BRANCH_SLUG }}
 
       - name: Build and push Docker image (main)
         if: github.ref == 'refs/heads/main'
