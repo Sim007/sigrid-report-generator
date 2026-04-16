@@ -30,7 +30,6 @@ FROM python:3.13-alpine
 
 # Runtime-only shared libraries:
 # - libstdc++: required by numpy / pandas / matplotlib C++ extensions
-
 RUN apk add --no-cache \
         libstdc++ \
     && adduser -S -h /home/sigrid sigrid
