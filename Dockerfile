@@ -19,7 +19,6 @@ COPY pyproject.toml setup.cfg setup.py README.md ./
 # Copy only the application source
 COPY src/ src/
 
-
 # Install the application and all dependencies into an isolated prefix
 RUN pip install --upgrade pip \
     && pip install --no-cache-dir --prefix=/install .
@@ -27,11 +26,6 @@ RUN pip install --upgrade pip \
 # =====================================
 # Runtime stage
 # =====================================
-# NOTE:
-# This image supports numpy, pandas, matplotlib, pillow, and lxml.
-# Removing runtime libraries may cause import errors or rendering failures
-# that only appear at runtime (not during build).
-
 FROM python:3.13-alpine
 
 # Runtime-only shared libraries:
