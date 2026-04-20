@@ -51,7 +51,9 @@ ARCH_BEST_METRIC_TEXT = {
     ArchMetric.TECHNOLOGY_PREVALENCE: "The system excels in Technology Prevalence, aligning team knowledge and preventing component abandonment due to unfamiliar tech, fostering adaptability in areas requiring changes.",
     ArchMetric.BOUNDED_EVOLUTION: "The system's high score in Bounded Evolution signifies limited updates for components, preventing excessive dependencies and knowledge centralization, and promoting a more balanced and adaptable system.",
     ArchMetric.KNOWLEDGE_DISTRIBUTION: "The system's high score in Knowledge Distribution averts reliance on a single developer, mitigating knowledge loss risks and fostering continuity.",
+    ArchMetric.KNOWLEDGE_AWARENESS: "The system's high score in Knowledge Awareness averts reliance on a single developer, mitigating knowledge loss risks and fostering continuity.",
     ArchMetric.COMPONENT_FRESHNESS: "The system's high score in Component Freshness ensures activity across multiple components, avoiding centralization, fostering balance, and reducing reliance on a single component.",
+    ArchMetric.TEAM_STABILITY: "The system's high score in Team Stability ensures consistency and continuity in terms of preserving a team structure for knowledge retention."
 }
 
 ARCH_WORST_METRIC_TEXT = {
@@ -66,6 +68,7 @@ ARCH_WORST_METRIC_TEXT = {
     ArchMetric.BOUNDED_EVOLUTION: "The system scores poorly in Bounded Evolution, implying excessive updates, possibly signaling over-dependence, centralization issues, and hindering system stability and adaptability.",
     ArchMetric.KNOWLEDGE_DISTRIBUTION: "The system's low score in Knowledge Distribution risks knowledge loss with a single developer on a large component, hindering adaptability and continuity upon that person's departure.",
     ArchMetric.COMPONENT_FRESHNESS: "The system's low score in Component Freshness impedes adaptability, indicating centralized activity rather than distributed across components, hindering a balanced and responsive system.",
+    ArchMetric.TEAM_STABILITY: "The system's low score in Team Stability indicates a continuity risk, having an unstable team means it will be hard to ensure knowledge retention moving forward."
 }
 
 
