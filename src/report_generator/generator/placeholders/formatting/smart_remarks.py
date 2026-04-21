@@ -67,6 +67,7 @@ ARCH_WORST_METRIC_TEXT = {
     ArchMetric.TECHNOLOGY_PREVALENCE: "The system scores poorly in Technology Prevalence, hampering adaptability and risking component abandonment due to misaligned tech knowledge, impacting efficient change implementation.",
     ArchMetric.BOUNDED_EVOLUTION: "The system scores poorly in Bounded Evolution, implying excessive updates, possibly signaling over-dependence, centralization issues, and hindering system stability and adaptability.",
     ArchMetric.KNOWLEDGE_DISTRIBUTION: "The system's low score in Knowledge Distribution risks knowledge loss with a single developer on a large component, hindering adaptability and continuity upon that person's departure.",
+    ArchMetric.KNOWLEDGE_AWARENESS: "The system's low score in Knowledge Awareness risks knowledge loss with a single developer on a large component, hindering adaptability and continuity upon that person's departure.",
     ArchMetric.COMPONENT_FRESHNESS: "The system's low score in Component Freshness impedes adaptability, indicating centralized activity rather than distributed across components, hindering a balanced and responsive system.",
     ArchMetric.TEAM_STABILITY: "The system's low score in Team Stability indicates a continuity risk, having an unstable team means it will be hard to ensure knowledge retention moving forward.",
 }
