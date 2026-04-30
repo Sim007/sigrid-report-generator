@@ -326,7 +326,10 @@ def tech_risk(idx: int):
 def maint_rating_param(metric: MaintMetric):
     """The 0.5-5.5 star rating for this metric."""
     metric_key = metric.to_json_name()
-    return star_rating_round(maintainability_data.data[metric_key])
+    rating = maintainability_data.data.get(metric_key)
+    if rating is None:
+        return ""
+    return star_rating_round(rating)
 
 
 @parameterized_text_placeholder(
@@ -334,8 +337,11 @@ def maint_rating_param(metric: MaintMetric):
 )
 def maint_rating_diff_param(metric: MaintMetric):
     """The rating difference for the specified metric within the reporting period."""
-    old_rating = maintainability_data.start_snapshot[metric.to_json_name()]
-    new_rating = maintainability_data.data[metric.to_json_name()]
+    metric_key = metric.to_json_name()
+    old_rating = maintainability_data.start_snapshot.get(metric_key)
+    new_rating = maintainability_data.data.get(metric_key)
+    if old_rating is None or new_rating is None:
+        return ""
     return format_diff(old_rating, new_rating)
 
 
@@ -345,7 +351,10 @@ def maint_rating_diff_param(metric: MaintMetric):
 def maint_stars_param(metric: MaintMetric):
     """Stars corresponding to this metric rating."""
     metric_key = metric.to_json_name()
-    return calculate_stars(maintainability_data.data[metric_key])
+    rating = maintainability_data.data.get(metric_key)
+    if rating is None:
+        return ""
+    return calculate_stars(rating)
 
 
 @text_placeholder()
