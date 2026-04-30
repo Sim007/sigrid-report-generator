@@ -131,7 +131,9 @@ def maint_date_year():
 @text_placeholder()
 def maint_size():
     """Description of the system volume."""
-    volume_rating = maintainability_data.data["volume"]
+    volume_rating = maintainability_data.data.get("volume")
+    if volume_rating is None:
+        return ""
     if volume_rating < 1.5:
         return "very large"
     elif volume_rating < 2.5:
@@ -221,7 +223,10 @@ def system_loc_format_dot():
 @text_placeholder()
 def volume_relative():
     """Relative volume remark for the system."""
-    return smart_remarks.relative_volume(maintainability_data.data["volume"])
+    volume_rating = maintainability_data.data.get("volume")
+    if volume_rating is None:
+        return ""
+    return smart_remarks.relative_volume(volume_rating)
 
 
 @text_placeholder()
