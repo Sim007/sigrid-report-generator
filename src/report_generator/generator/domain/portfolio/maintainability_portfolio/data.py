@@ -75,8 +75,9 @@ class MaintainabilityPortfolioData(RatedPortfolioMixin):
             "unitComplexity": system["unitComplexity"],
             "unitInterfacing": system["unitInterfacing"],
             "unitSize": system["unitSize"],
+            "volume": system.get("volume"),
             "volumeInPersonMonths": system["volumeInPersonMonths"],
-            "volumeInLoc": system.get("volumeInLoc"),
+            "volumeInLoc": system["volumeInLoc"],
             "maintainabilityDate": system["maintainabilityDate"],
         }
 
