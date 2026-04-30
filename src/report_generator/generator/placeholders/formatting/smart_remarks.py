@@ -208,8 +208,10 @@ def arch_best_metric_remark(arch_sp_ratings):
 def sort_metrics(ratings, metrics: list[MetricEnum]):
     metric_data = {}
     for metric in metrics:
-        value = ratings[metric.to_json_name()]
-        if value > 0.1:  # If rating is zero, it means that rating is N/A. Ignore
+        value = ratings.get(metric.to_json_name(), 0)
+        if (
+            value > 0.1
+        ):  # If rating is zero or missing, it means that rating is N/A. Ignore
             metric_data[metric] = value
     return sorted(metric_data.items(), key=lambda item: item[1])
 
