@@ -65,20 +65,19 @@ class MaintainabilityPortfolioData(RatedPortfolioMixin):
     @staticmethod
     def _get_head_entry(system):
         return {
-            "maintainability": system.get("maintainability"),
-            "componentBalance": system.get("componentBalance"),
-            "componentIndependence": system.get("componentIndependence"),
-            "componentEntanglement": system.get("componentEntanglement"),
-            "duplication": system.get("duplication"),
-            "moduleCoupling": system.get("moduleCoupling"),
-            "testCodeRatio": system.get("testCodeRatio"),
-            "unitComplexity": system.get("unitComplexity"),
-            "unitInterfacing": system.get("unitInterfacing"),
-            "unitSize": system.get("unitSize"),
-            "volume": system.get("volume"),
-            "volumeInPersonMonths": system.get("volumeInPersonMonths"),
+            "maintainability": system["maintainability"],
+            "componentBalance": system["componentBalance"],
+            "componentIndependence": system["componentIndependence"],
+            "componentEntanglement": system["componentEntanglement"],
+            "duplication": system["duplication"],
+            "moduleCoupling": system["moduleCoupling"],
+            "testCodeRatio": system["testCodeRatio"],
+            "unitComplexity": system["unitComplexity"],
+            "unitInterfacing": system["unitInterfacing"],
+            "unitSize": system["unitSize"],
+            "volumeInPersonMonths": system["volumeInPersonMonths"],
             "volumeInLoc": system.get("volumeInLoc"),
-            "maintainabilityDate": system.get("maintainabilityDate"),
+            "maintainabilityDate": system["maintainabilityDate"],
         }
 
     @staticmethod
