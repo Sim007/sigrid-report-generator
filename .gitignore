@@ -9,6 +9,8 @@ __pycache__
 .claude/settings.local.json
 
 # To protect against people accidentally running in this directory
+*.pptx
+out*
 out.pptx
 out.docx
 ~$*.*
