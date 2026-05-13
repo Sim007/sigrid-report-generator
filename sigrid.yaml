@@ -5,7 +5,7 @@ component_base_dirs:
   - "tests/report_generator"
 
 exclude:
-  - ".*/generate_placeholder_docs.py"
+  - ".*/generate_placeholder_docs[.]py"
 
 languages:
   - name: "Python"

@@ -38,11 +38,6 @@ def _build_xy_chart_data(
     return chart_data
 
 
-def _display_name(system_name: str) -> str:
-    md = maintainability_portfolio_data.get_system_metadata(system_name)
-    return md.get("displayName") or system_name
-
-
 def _build_system_chart_data() -> XyChartData:
     return _build_xy_chart_data(
         system_metadata.display_name,
@@ -78,7 +73,8 @@ def _populate_portfolio_chart(presentation: Presentation) -> None:
         return
     chart_data = _build_portfolio_chart_data()
     display_names = [
-        _display_name(n) for n in maintainability_portfolio_data.system_names
+        maintainability_portfolio_data.get_system_display_name(n)
+        for n in maintainability_portfolio_data.system_names
     ]
     for chart in charts:
         chart.replace_data(chart_data)
