@@ -12,9 +12,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from functools import cached_property
 from abc import ABC, abstractmethod
 from datetime import date
+from functools import cached_property
 
 _SEVERITY_LEVELS = ("critical", "high", "medium", "low")
 

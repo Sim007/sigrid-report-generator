@@ -12,23 +12,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import statistics
+
 from report_generator.generator.domain import osh_data
 from report_generator.generator.placeholders.formatting.formatters import (
     calculate_stars,
-    star_rating_round,
     format_exploit_chance,
+    star_rating_round,
+)
+from report_generator.generator.placeholders.implementations.text.shared.osh_utils import (
+    enrich_cves_with_epss_scores,
+    exploit_probability,
 )
 from report_generator.generator.utils.constants import OSHMetric
 
 from ...formatting import smart_remarks
 from .base import parameterized_text_placeholder, text_placeholder
-
-from report_generator.generator.placeholders.implementations.text.shared.osh_utils import (
-    enrich_cves_with_epss_scores,
-    exploit_probability,
-)
-
-import statistics
 
 
 @text_placeholder()

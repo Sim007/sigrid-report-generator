@@ -20,10 +20,10 @@ from typing import Union
 from report_generator.generator.context import sigrid_api
 from report_generator.generator.domain.shared.osh_base import (
     OSHMetricsBase,
-    vulnerability_severity_counts,
-    map_cves_to_affected_libraries,
-    component_version_staleness_days,
     _find_cyclonedx_property_value,
+    component_version_staleness_days,
+    map_cves_to_affected_libraries,
+    vulnerability_severity_counts,
 )
 from report_generator.generator.utils.constants import MetricEnum, OSHMetric
 

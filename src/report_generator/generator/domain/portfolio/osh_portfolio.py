@@ -24,9 +24,9 @@ from report_generator.generator.domain.portfolio.shared.rated_mixin import (
 )
 from report_generator.generator.domain.shared.osh_base import (
     OSHMetricsBase,
-    vulnerability_severity_counts,
-    map_cves_to_affected_libraries,
     component_version_staleness_days,
+    map_cves_to_affected_libraries,
+    vulnerability_severity_counts,
 )
 
 
