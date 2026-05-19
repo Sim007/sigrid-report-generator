@@ -113,5 +113,20 @@ class OSHData(OSHMetricsBase):
     def dependencies_count(self) -> int:
         return len(self.raw_data["components"])
 
+    @cached_property
+    def library_risk_levels(self) -> dict[str, int]:
+        """Count each unique library once by its highest risk level across all OSH categories."""
+        risk_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0, "no_risk": 0}
+        processed: dict[str, int] = {}
+
+        for component in self.raw_data.get("components", []):
+            lib_id = f"{component.get('name', '')}:{component.get('version', '')}"
+            highest_risk = self._highest_risk_for_component(component)
+
+            if lib_id not in processed or highest_risk < processed[lib_id]:
+                self._update_library_risk(lib_id, highest_risk, processed, risk_counts)
+
+        return risk_counts
+
 
 osh_data = OSHData()

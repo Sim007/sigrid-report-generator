@@ -145,3 +145,33 @@ def osh_rating_param(metric: OSHMetric):
 def osh_stars_param(metric: OSHMetric):
     """Stars corresponding to this OSH metric rating."""
     return calculate_stars(osh_data.get_rating_for_metric(metric))
+
+
+@text_placeholder()
+def osh_critical_risk():
+    """Number of libraries with critical-level risk across all OSH categories."""
+    return osh_data.library_risk_levels["critical"]
+
+
+@text_placeholder()
+def osh_high_risk():
+    """Number of libraries with high-level risk across all OSH categories."""
+    return osh_data.library_risk_levels["high"]
+
+
+@text_placeholder()
+def osh_medium_risk():
+    """Number of libraries with medium-level risk across all OSH categories."""
+    return osh_data.library_risk_levels["medium"]
+
+
+@text_placeholder()
+def osh_low_risk():
+    """Number of libraries with low-level risk across all OSH categories."""
+    return osh_data.library_risk_levels["low"]
+
+
+@text_placeholder()
+def osh_no_risk():
+    """Number of libraries with no OSH risk."""
+    return osh_data.library_risk_levels["no_risk"]
