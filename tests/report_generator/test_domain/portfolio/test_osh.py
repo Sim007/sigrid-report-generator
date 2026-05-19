@@ -399,3 +399,311 @@ class TestOSHMetricsBase:
         _ = metrics.outdated_count
         _ = metrics.outdated_count
         assert call_count["freshness"] == 1  # Should only calculate once
+
+
+def _make_component(name, version, risks: dict):
+    """Build a CycloneDX-style component dict with sigrid risk properties."""
+    risk_key_map = {
+        "vulnerability": "sigrid:risk:vulnerability",
+        "legal": "sigrid:risk:legal",
+        "freshness": "sigrid:risk:freshness",
+        "stability": "sigrid:risk:stability",
+        "management": "sigrid:risk:management",
+        "activity": "sigrid:risk:activity",
+    }
+    properties = [
+        {"name": risk_key_map[k], "value": v}
+        for k, v in risks.items()
+        if k in risk_key_map
+    ]
+    return {"name": name, "version": version, "properties": properties}
+
+
+class TestLibraryRiskLevelsBase:
+    """Tests for library_risk_levels via OSHMetricsBase shared logic."""
+
+    def _make_osh_base_instance(self, components):
+        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
+
+        class _Stub(OSHMetricsBase):
+            def get_components(self):
+                return components
+
+        instance = _Stub()
+        # Patch library_risk_levels to call base helpers directly
+        return instance
+
+    def test_get_risk_value_returns_correct_integer(self):
+        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
+
+        base = OSHMetricsBase()
+        props = [{"name": "sigrid:risk:vulnerability", "value": "CRITICAL"}]
+        assert base._get_risk_value(props, "sigrid:risk:vulnerability") == 0
+
+        props = [{"name": "sigrid:risk:vulnerability", "value": "HIGH"}]
+        assert base._get_risk_value(props, "sigrid:risk:vulnerability") == 1
+
+        props = [{"name": "sigrid:risk:vulnerability", "value": "MEDIUM"}]
+        assert base._get_risk_value(props, "sigrid:risk:vulnerability") == 2
+
+        props = [{"name": "sigrid:risk:vulnerability", "value": "LOW"}]
+        assert base._get_risk_value(props, "sigrid:risk:vulnerability") == 3
+
+    def test_get_risk_value_returns_no_risk_for_unknown(self):
+        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
+
+        base = OSHMetricsBase()
+        assert base._get_risk_value([], "sigrid:risk:vulnerability") == 4
+        props = [{"name": "sigrid:risk:vulnerability", "value": "UNKNOWN"}]
+        assert base._get_risk_value(props, "sigrid:risk:vulnerability") == 4
+
+    def test_highest_risk_for_component_uses_worst_category(self):
+        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
+
+        base = OSHMetricsBase()
+        component = _make_component(
+            "lib",
+            "1.0",
+            {
+                "vulnerability": "LOW",
+                "legal": "CRITICAL",
+                "freshness": "MEDIUM",
+                "stability": "LOW",
+                "management": "LOW",
+                "activity": "LOW",
+            },
+        )
+        assert base._highest_risk_for_component(component) == 0  # CRITICAL wins
+
+    def test_highest_risk_for_component_no_risk_when_all_missing(self):
+        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
+
+        base = OSHMetricsBase()
+        assert base._highest_risk_for_component({"properties": []}) == 4
+
+
+class TestLibraryRiskLevelsPortfolio:
+    """Tests for library_risk_levels on OSHRatingsPortfolioData."""
+
+    def _portfolio_with_raw(self, systems):
+        portfolio = OSHRatingsPortfolioData()
+        portfolio.__dict__["raw_data"] = {"systems": systems}
+        return portfolio
+
+    def test_counts_single_library(self):
+        component = _make_component(
+            "requests",
+            "2.28.0",
+            {
+                "vulnerability": "HIGH",
+                "legal": "LOW",
+                "freshness": "LOW",
+                "stability": "LOW",
+                "management": "LOW",
+                "activity": "LOW",
+            },
+        )
+        portfolio = self._portfolio_with_raw(
+            [{"systemName": "sys1", "sbom": {"components": [component]}}]
+        )
+        result = portfolio.library_risk_levels
+        assert result["high"] == 1
+        assert result["critical"] == 0
+
+    def test_deduplicates_same_library_across_systems(self):
+        """Same name:version seen in two systems should be counted once."""
+        component = _make_component(
+            "requests",
+            "2.28.0",
+            {
+                "vulnerability": "HIGH",
+                "legal": "LOW",
+                "freshness": "LOW",
+                "stability": "LOW",
+                "management": "LOW",
+                "activity": "LOW",
+            },
+        )
+        portfolio = self._portfolio_with_raw(
+            [
+                {"systemName": "sys1", "sbom": {"components": [component]}},
+                {"systemName": "sys2", "sbom": {"components": [component]}},
+            ]
+        )
+        result = portfolio.library_risk_levels
+        assert sum(result.values()) == 1
+
+    def test_deduplication_keeps_highest_risk(self):
+        """When the same lib appears with different risks, keep the worst (lowest int)."""
+        low_risk = _make_component(
+            "requests",
+            "2.28.0",
+            {
+                "vulnerability": "LOW",
+                "legal": "LOW",
+                "freshness": "LOW",
+                "stability": "LOW",
+                "management": "LOW",
+                "activity": "LOW",
+            },
+        )
+        high_risk = _make_component(
+            "requests",
+            "2.28.0",
+            {
+                "vulnerability": "CRITICAL",
+                "legal": "LOW",
+                "freshness": "LOW",
+                "stability": "LOW",
+                "management": "LOW",
+                "activity": "LOW",
+            },
+        )
+        portfolio = self._portfolio_with_raw(
+            [
+                {"systemName": "sys1", "sbom": {"components": [low_risk]}},
+                {"systemName": "sys2", "sbom": {"components": [high_risk]}},
+            ]
+        )
+        result = portfolio.library_risk_levels
+        assert result["critical"] == 1
+        assert result["low"] == 0
+        assert sum(result.values()) == 1
+
+    def test_empty_data_returns_zero_counts(self):
+        portfolio = self._portfolio_with_raw([])
+        result = portfolio.library_risk_levels
+        assert result == {"critical": 0, "high": 0, "medium": 0, "low": 0, "no_risk": 0}
+
+    def test_multiple_distinct_libraries(self):
+        components = [
+            _make_component(
+                "lib-a",
+                "1.0",
+                {
+                    "vulnerability": "CRITICAL",
+                    "legal": "LOW",
+                    "freshness": "LOW",
+                    "stability": "LOW",
+                    "management": "LOW",
+                    "activity": "LOW",
+                },
+            ),
+            _make_component(
+                "lib-b",
+                "1.0",
+                {
+                    "vulnerability": "LOW",
+                    "legal": "LOW",
+                    "freshness": "LOW",
+                    "stability": "LOW",
+                    "management": "LOW",
+                    "activity": "LOW",
+                },
+            ),
+            _make_component(
+                "lib-c",
+                "1.0",
+                {
+                    "vulnerability": "HIGH",
+                    "legal": "LOW",
+                    "freshness": "LOW",
+                    "stability": "LOW",
+                    "management": "LOW",
+                    "activity": "LOW",
+                },
+            ),
+        ]
+        portfolio = self._portfolio_with_raw(
+            [{"systemName": "sys1", "sbom": {"components": components}}]
+        )
+        result = portfolio.library_risk_levels
+        assert result["critical"] == 1
+        assert result["high"] == 1
+        assert result["low"] == 1
+        assert sum(result.values()) == 3
+
+
+class TestLibraryRiskLevelsSystem:
+    """Tests for library_risk_levels on OSHData (system level)."""
+
+    def _osh_with_components(self, components):
+        from report_generator.generator.domain.system.osh import OSHData
+
+        instance = OSHData()
+        instance.__dict__["raw_data"] = {
+            "components": components,
+            "metadata": {"properties": []},
+        }
+        return instance
+
+    def test_counts_single_library(self):
+        component = _make_component(
+            "requests",
+            "2.28.0",
+            {
+                "vulnerability": "MEDIUM",
+                "legal": "LOW",
+                "freshness": "LOW",
+                "stability": "LOW",
+                "management": "LOW",
+                "activity": "LOW",
+            },
+        )
+        result = self._osh_with_components([component]).library_risk_levels
+        assert result["medium"] == 1
+        assert sum(result.values()) == 1
+
+    def test_deduplicates_same_library(self):
+        component = _make_component(
+            "requests",
+            "2.28.0",
+            {
+                "vulnerability": "HIGH",
+                "legal": "LOW",
+                "freshness": "LOW",
+                "stability": "LOW",
+                "management": "LOW",
+                "activity": "LOW",
+            },
+        )
+        result = self._osh_with_components([component, component]).library_risk_levels
+        assert sum(result.values()) == 1
+
+    def test_deduplication_keeps_highest_risk(self):
+        low = _make_component(
+            "requests",
+            "2.28.0",
+            {
+                "vulnerability": "LOW",
+                "legal": "LOW",
+                "freshness": "LOW",
+                "stability": "LOW",
+                "management": "LOW",
+                "activity": "LOW",
+            },
+        )
+        critical = _make_component(
+            "requests",
+            "2.28.0",
+            {
+                "vulnerability": "CRITICAL",
+                "legal": "LOW",
+                "freshness": "LOW",
+                "stability": "LOW",
+                "management": "LOW",
+                "activity": "LOW",
+            },
+        )
+        result = self._osh_with_components([low, critical]).library_risk_levels
+        assert result["critical"] == 1
+        assert result["low"] == 0
+
+    def test_empty_data_returns_zero_counts(self):
+        result = self._osh_with_components([]).library_risk_levels
+        assert result == {"critical": 0, "high": 0, "medium": 0, "low": 0, "no_risk": 0}
+
+    def test_no_risk_library(self):
+        component = _make_component("lib", "1.0", {})
+        result = self._osh_with_components([component]).library_risk_levels
+        assert result["no_risk"] == 1
