@@ -22,7 +22,12 @@ from report_generator.generator.domain.portfolio.shared import utils
 from report_generator.generator.domain.portfolio.shared.rated_mixin import (
     RatedPortfolioMixin,
 )
-from report_generator.generator.domain.shared.osh_base import OSHMetricsBase, vulnerability_severity_counts, map_cves_to_affected_libraries, component_version_staleness_days
+from report_generator.generator.domain.shared.osh_base import (
+    OSHMetricsBase,
+    vulnerability_severity_counts,
+    map_cves_to_affected_libraries,
+    component_version_staleness_days,
+)
 
 
 class OSHRatingsPortfolioData(RatedPortfolioMixin, OSHMetricsBase):
@@ -275,10 +280,10 @@ class OSHRatingsPortfolioData(RatedPortfolioMixin, OSHMetricsBase):
         return utils.system_names_helper(self.raw_data["systems"], "systemName")
 
     @cached_property
-    def vulnerability_distribution(self) -> dict[str,int]:
+    def vulnerability_distribution(self) -> dict[str, int]:
         res = []
         for system_name in self.system_names:
-            system = self.find_system(system_name)['sbom']
+            system = self.find_system(system_name)["sbom"]
             if system is not None:
                 res += system.get("vulnerabilities", [])
         return vulnerability_severity_counts(res)
@@ -287,16 +292,18 @@ class OSHRatingsPortfolioData(RatedPortfolioMixin, OSHMetricsBase):
     def map_vulnerabilities_to_libraries(self) -> dict[str, dict]:
         res = {}
         for system_name in self.system_names:
-            system = self.find_system(system_name)['sbom']
+            system = self.find_system(system_name)["sbom"]
             if system is not None:
-                res[system_name] = map_cves_to_affected_libraries(system.get("components", []), system.get("vulnerabilities", []))
+                res[system_name] = map_cves_to_affected_libraries(
+                    system.get("components", []), system.get("vulnerabilities", [])
+                )
         return res
-    
+
     @cached_property
     def age_distribution(self) -> list[int]:
         res = []
         for system_name in self.system_names:
-            system = self.find_system(system_name)['sbom']
+            system = self.find_system(system_name)["sbom"]
             if system is not None:
                 res += component_version_staleness_days(system.get("components", []))
         return res

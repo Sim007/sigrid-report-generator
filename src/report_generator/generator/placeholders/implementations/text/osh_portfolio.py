@@ -16,7 +16,7 @@ from report_generator.generator.domain import osh_portfolio_data
 from report_generator.generator.placeholders.formatting.formatters import (
     calculate_stars,
     star_rating_round,
-    format_exploit_chance
+    format_exploit_chance,
 )
 from report_generator.generator.utils.constants import OSHMetric
 
@@ -26,10 +26,11 @@ from .base import parameterized_text_placeholder, text_placeholder
 from report_generator.generator.placeholders.implementations.text.shared.osh_utils import (
     enrich_cves_with_epss_scores,
     exploit_probability,
-    aggregate_cves_across_systems
+    aggregate_cves_across_systems,
 )
 
 import statistics
+
 
 @text_placeholder()
 def portfolio_osh_total_deps():
@@ -166,6 +167,7 @@ def portfolio_osh_avg_rating():
     """Volume-weighted average OSH rating across all systems in the portfolio."""
     return star_rating_round(osh_portfolio_data.weighted_average_rating)
 
+
 @text_placeholder()
 def osh_portfolio_probability_of_exploit():
     cves_per_system = osh_portfolio_data.map_vulnerabilities_to_libraries
@@ -173,30 +175,36 @@ def osh_portfolio_probability_of_exploit():
     enrich_cves_with_epss_scores(cves=cves)
     return format_exploit_chance(exploit_probability(cves))
 
+
 @text_placeholder()
 def osh_portfolio_median_library_age():
     distr = osh_portfolio_data.age_distribution
     return f"{int(statistics.median(distr))} days"
 
+
 @text_placeholder()
 def osh_portfolio_known_vulnerabilities_total_minus_unknown():
     distr = osh_portfolio_data.vulnerability_distribution
-    return f"{distr['critical']+distr['high']+distr['medium']+distr['low']}"
+    return f"{distr['critical'] + distr['high'] + distr['medium'] + distr['low']}"
+
 
 @text_placeholder()
 def osh_portfolio_known_vulnerabilities_critical():
     distr = osh_portfolio_data.vulnerability_distribution
     return f"{distr['critical']}"
 
+
 @text_placeholder()
 def osh_portfolio_known_vulnerabilities_high():
     distr = osh_portfolio_data.vulnerability_distribution
     return f"{distr['high']}"
 
+
 @text_placeholder()
 def osh_portfolio_known_vulnerabilities_medium():
     distr = osh_portfolio_data.vulnerability_distribution
     return f"{distr['medium']}"
+
 
 @text_placeholder()
 def osh_portfolio_known_vulnerabilities_low():

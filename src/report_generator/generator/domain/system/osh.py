@@ -23,7 +23,7 @@ from report_generator.generator.domain.shared.osh_base import (
     vulnerability_severity_counts,
     map_cves_to_affected_libraries,
     component_version_staleness_days,
-    _find_cyclonedx_property_value
+    _find_cyclonedx_property_value,
 )
 from report_generator.generator.utils.constants import MetricEnum, OSHMetric
 
@@ -45,14 +45,14 @@ class OSHData(OSHMetricsBase):
         return datetime.strptime(
             self.raw_data["metadata"]["timestamp"], "%Y-%m-%dT%H:%M:%SZ"
         )
-    
+
     @cached_property
     def components(self):
-        return self.raw_data.get('components', [])
-    
+        return self.raw_data.get("components", [])
+
     @cached_property
     def vulnerabilities(self):
-        return self.raw_data.get('vulnerabilities', [])
+        return self.raw_data.get("vulnerabilities", [])
 
     @cached_property
     def system_rating(self) -> float:
@@ -119,15 +119,15 @@ class OSHData(OSHMetricsBase):
     @cached_property
     def dependencies_count(self) -> int:
         return len(self.raw_data["components"])
-    
+
     @cached_property
-    def vulnerability_distribution(self) -> dict[str,int]:
+    def vulnerability_distribution(self) -> dict[str, int]:
         return vulnerability_severity_counts(self.vulnerabilities)
 
     @cached_property
     def map_vulnerabilities_to_libraries(self) -> dict[str, dict]:
         return map_cves_to_affected_libraries(self.components, self.vulnerabilities)
-    
+
     @cached_property
     def age_distribution(self) -> list[int]:
         return component_version_staleness_days(self.components)

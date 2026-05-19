@@ -111,6 +111,7 @@ def split_days_into_buckets(days: list[int], buckets: list[int]) -> list[int]:
     # Prepend total number of values
     return [len(days), *counts]
 
+
 def format_exploit_chance(chance: float) -> str:
     if chance < 0.01:
         return "< 1%"

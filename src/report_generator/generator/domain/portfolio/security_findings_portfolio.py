@@ -15,7 +15,10 @@ class SecurityPortfolioFindings:
     @filter_data_on_portfolio_arguments(system_tag="systemName")
     def data(self):
         return [
-            {"systemName": system_name, "findings": sigrid_api.get_security_findings(system_name)}
+            {
+                "systemName": system_name,
+                "findings": sigrid_api.get_security_findings(system_name),
+            }
             for system_name in maintainability_portfolio_data.system_names
         ]
 
