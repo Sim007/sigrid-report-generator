@@ -111,15 +111,6 @@ class OSHMetricsBase:
         """Increment the appropriate risk count based on the risk level."""
         risk_counts[_RISK_LABEL.get(risk_level, "no_risk")] += 1
 
-    def _update_library_risk(
-        self, lib_id: str, highest_risk: int, processed: dict, risk_counts: dict
-    ) -> None:
-        """Update risk counts when a library is seen for the first time or with a higher risk."""
-        if lib_id in processed:
-            risk_counts[_RISK_LABEL[processed[lib_id]]] -= 1
-        processed[lib_id] = highest_risk
-        self._categorize_risk_level(highest_risk, risk_counts)
-
     def _highest_risk_for_component(self, component: dict) -> int:
         """Return the highest (lowest integer) risk level across all OSH categories for a component."""
         props = component.get("properties", [])

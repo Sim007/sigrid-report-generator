@@ -510,8 +510,8 @@ class TestLibraryRiskLevelsPortfolio:
         assert result["high"] == 1
         assert result["critical"] == 0
 
-    def test_deduplicates_same_library_across_systems(self):
-        """Same name:version seen in two systems should be counted once."""
+    def test_same_library_across_systems_counted_per_occurrence(self):
+        """Same name:version seen in two systems is counted twice (once per occurrence)."""
         component = _make_component(
             "requests",
             "2.28.0",
@@ -531,10 +531,10 @@ class TestLibraryRiskLevelsPortfolio:
             ]
         )
         result = portfolio.library_risk_levels
-        assert sum(result.values()) == 1
+        assert sum(result.values()) == 2
 
-    def test_deduplication_keeps_highest_risk(self):
-        """When the same lib appears with different risks, keep the worst (lowest int)."""
+    def test_same_library_with_different_risks_counted_per_occurrence(self):
+        """Each component occurrence is counted independently, not deduplicated."""
         low_risk = _make_component(
             "requests",
             "2.28.0",
@@ -547,7 +547,7 @@ class TestLibraryRiskLevelsPortfolio:
                 "activity": "LOW",
             },
         )
-        high_risk = _make_component(
+        critical_risk = _make_component(
             "requests",
             "2.28.0",
             {
@@ -562,13 +562,13 @@ class TestLibraryRiskLevelsPortfolio:
         portfolio = self._portfolio_with_raw(
             [
                 {"systemName": "sys1", "sbom": {"components": [low_risk]}},
-                {"systemName": "sys2", "sbom": {"components": [high_risk]}},
+                {"systemName": "sys2", "sbom": {"components": [critical_risk]}},
             ]
         )
         result = portfolio.library_risk_levels
         assert result["critical"] == 1
-        assert result["low"] == 0
-        assert sum(result.values()) == 1
+        assert result["low"] == 1
+        assert sum(result.values()) == 2
 
     def test_empty_data_returns_zero_counts(self):
         portfolio = self._portfolio_with_raw([])
@@ -654,7 +654,7 @@ class TestLibraryRiskLevelsSystem:
         assert result["medium"] == 1
         assert sum(result.values()) == 1
 
-    def test_deduplicates_same_library(self):
+    def test_same_library_counted_per_occurrence(self):
         component = _make_component(
             "requests",
             "2.28.0",
@@ -668,9 +668,9 @@ class TestLibraryRiskLevelsSystem:
             },
         )
         result = self._osh_with_components([component, component]).library_risk_levels
-        assert sum(result.values()) == 1
+        assert sum(result.values()) == 2
 
-    def test_deduplication_keeps_highest_risk(self):
+    def test_components_with_different_risks_counted_independently(self):
         low = _make_component(
             "requests",
             "2.28.0",
@@ -697,7 +697,8 @@ class TestLibraryRiskLevelsSystem:
         )
         result = self._osh_with_components([low, critical]).library_risk_levels
         assert result["critical"] == 1
-        assert result["low"] == 0
+        assert result["low"] == 1
+        assert sum(result.values()) == 2
 
     def test_empty_data_returns_zero_counts(self):
         result = self._osh_with_components([]).library_risk_levels

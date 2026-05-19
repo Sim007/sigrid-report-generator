@@ -150,19 +150,13 @@ class OSHRatingsPortfolioData(RatedPortfolioMixin, OSHMetricsBase):
 
     @cached_property
     def library_risk_levels(self):
-        """Calculate risk level counts for libraries, counting each library once by its highest risk."""
+        """Count each library by its highest risk level across all OSH categories."""
         risk_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0, "no_risk": 0}
-        processed: dict[str, int] = {}
 
         for system in self.raw_data.get("systems", []):
             for component in system.get("sbom", {}).get("components", []):
-                lib_id = f"{component.get('name', '')}:{component.get('version', '')}"
                 highest_risk = self._highest_risk_for_component(component)
-
-                if lib_id not in processed or highest_risk < processed[lib_id]:
-                    self._update_library_risk(
-                        lib_id, highest_risk, processed, risk_counts
-                    )
+                self._categorize_risk_level(highest_risk, risk_counts)
 
         return risk_counts
 
