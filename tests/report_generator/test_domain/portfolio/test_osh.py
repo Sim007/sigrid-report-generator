@@ -162,7 +162,7 @@ class _StubOSHMetrics:
         return {}
 
     @property
-    def map_vulnerabilities_to_libraries(self) -> dict[str, dict]:
+    def cves_mapped_to_libraries(self) -> dict[str, dict]:
         return {}
 
     @property

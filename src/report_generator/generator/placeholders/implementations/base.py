@@ -23,8 +23,8 @@ from enum import Enum
 from typing import Union
 
 from report_generator.generator.context.sigrid_api import SigridAPIRequestFailedError
-from report_generator.generator.report import Report, ReportType
 from report_generator.generator.domain.external.epss import EPSSScoreRetrievalError
+from report_generator.generator.report import Report, ReportType
 
 Parameter = Union[str, int, Enum]
 ParameterList = Iterable[Parameter]
