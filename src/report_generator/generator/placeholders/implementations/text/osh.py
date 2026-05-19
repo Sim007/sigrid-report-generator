@@ -16,12 +16,19 @@ from report_generator.generator.domain import osh_data
 from report_generator.generator.placeholders.formatting.formatters import (
     calculate_stars,
     star_rating_round,
+    format_exploit_chance
 )
 from report_generator.generator.utils.constants import OSHMetric
 
 from ...formatting import smart_remarks
 from .base import parameterized_text_placeholder, text_placeholder
 
+from report_generator.generator.placeholders.implementations.text.shared.osh_utils import (
+    enrich_cves_with_epss_scores,
+    exploit_probability
+)
+
+import statistics
 
 @text_placeholder()
 def osh_risk_summary():
@@ -145,3 +152,40 @@ def osh_rating_param(metric: OSHMetric):
 def osh_stars_param(metric: OSHMetric):
     """Stars corresponding to this OSH metric rating."""
     return calculate_stars(osh_data.get_rating_for_metric(metric))
+
+
+@text_placeholder()
+def osh_probability_of_exploit():
+    cves = osh_data.map_vulnerabilities_to_libraries
+    enrich_cves_with_epss_scores(cves=cves)
+    return format_exploit_chance(exploit_probability(cves))
+
+@text_placeholder()
+def osh_median_library_age():
+    distr = osh_data.age_distribution
+    return f"{int(statistics.median(distr))} days"
+
+@text_placeholder()
+def osh_known_vulnerabilities_total_minus_unknown():
+    distr = osh_data.vulnerability_distribution
+    return f"{distr['critical']+distr['high']+distr['medium']+distr['low']}"
+
+@text_placeholder()
+def osh_known_vulnerabilities_critical():
+    distr = osh_data.vulnerability_distribution
+    return f"{distr['critical']}"
+
+@text_placeholder()
+def osh_known_vulnerabilities_high():
+    distr = osh_data.vulnerability_distribution
+    return f"{distr['high']}"
+
+@text_placeholder()
+def osh_known_vulnerabilities_medium():
+    distr = osh_data.vulnerability_distribution
+    return f"{distr['medium']}"
+
+@text_placeholder()
+def osh_known_vulnerabilities_low():
+    distr = osh_data.vulnerability_distribution
+    return f"{distr['low']}"

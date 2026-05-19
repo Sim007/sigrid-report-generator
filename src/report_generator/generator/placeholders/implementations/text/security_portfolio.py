@@ -16,6 +16,7 @@ from report_generator.generator.domain import (
     security_dashboard_findings_portfolio_data,
     security_dashboard_resolution_times_portfolio_data,
     security_ratings_portfolio_data,
+    security_findings_portfolio_data
 )
 from report_generator.generator.placeholders.formatting.formatters import (
     star_rating_round,
@@ -363,3 +364,28 @@ def portfolio_sec_low_resolution_high_risk():
     return security_dashboard_resolution_times_portfolio_data.low_resolution_statistics[
         "high_risk"
     ]
+
+
+@text_placeholder()
+def security_portfolio_total_cvss_findings_raw():
+    return f"{security_findings_portfolio_data.count_findings('CRITICAL') + security_findings_portfolio_data.count_findings('HIGH') + security_findings_portfolio_data.count_findings('MEDIUM') + security_findings_portfolio_data.count_findings('LOW')}"
+
+
+@text_placeholder()
+def security_portfolio_cvss_critical_raw():
+    return f"{security_findings_portfolio_data.count_findings('CRITICAL')}"
+
+
+@text_placeholder()
+def security_portfolio_cvss_high_raw():
+    return f"{security_findings_portfolio_data.count_findings('HIGH')}"
+
+
+@text_placeholder()
+def security_portfolio_cvss_medium_raw():
+    return f"{security_findings_portfolio_data.count_findings('MEDIUM')}"
+
+
+@text_placeholder()
+def security_portfolio_cvss_low_raw():
+    return f"{security_findings_portfolio_data.count_findings('LOW')}"

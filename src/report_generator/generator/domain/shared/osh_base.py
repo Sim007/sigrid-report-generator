@@ -13,9 +13,54 @@
 #  limitations under the License.
 
 from functools import cached_property
+from abc import ABC, abstractmethod
+from datetime import date
 
+_SEVERITY_LEVELS = ("critical", "high", "medium", "low")
 
-class OSHMetricsBase:
+def vulnerability_severity_counts(vulnerabilities: list[dict]) -> dict[str, int]:
+    counts: dict[str, int] = {"total": len(vulnerabilities), "critical": 0, "high": 0, "medium": 0, "low": 0, "unknown": 0}
+    for vuln in vulnerabilities:
+        severities = {r["severity"].lower() for r in vuln.get("ratings", [])}
+        for level in _SEVERITY_LEVELS:
+            if level in severities:
+                counts[level] += 1
+                break
+        else:
+            counts["unknown"] += 1
+    return counts
+
+def map_cves_to_affected_libraries(components: list[dict], vulnerabilities: list[dict]) -> dict[str, dict]:
+    components_by_ref = {c["bom-ref"]: c for c in components}
+    result = {}
+    for vuln in vulnerabilities:
+        affected = [
+            {"name": c["name"], "version": c["version"], "purl": c.get("purl")}
+            for ref in vuln.get("affects", [])
+            if (c := components_by_ref.get(ref["ref"]))
+        ]
+        result[vuln["id"]] = {"count": len(affected), "libraries": affected}
+    return result
+
+def _find_cyclonedx_property_value(properties: list[dict], key: str) -> str | None:
+    for prop in properties:
+        if prop.get("name") == key:
+            return prop.get("value")
+    return None
+
+def component_version_staleness_days(components: list[dict]) -> list[int]:
+    result = []
+    today = date.today()
+    for component in components:
+        properties = component.get("properties")
+        if not properties:
+            continue
+        next_release_date = _find_cyclonedx_property_value(properties, "sigrid:next:releaseDate")
+        if next_release_date:
+            result.append((today - date.fromisoformat(next_release_date)).days)
+    return result
+
+class OSHMetricsBase(ABC):
     """Base class for OSH (Open Source Health) metrics.
 
     Provides common metrics calculations for both system-level and portfolio-level OSH data.
@@ -88,3 +133,16 @@ class OSHMetricsBase:
             "management": self.management_risk_distribution,
             "activity": self.activity_risk_distribution,
         }
+
+    @property
+    @abstractmethod
+    def vulnerability_distribution(self) -> dict[str, int]: ...
+
+    @property
+    @abstractmethod
+    def map_vulnerabilities_to_libraries(self) -> dict[str, dict]: ...
+
+    @property
+    @abstractmethod
+    def age_distribution(self) -> list[int]: ...
+
