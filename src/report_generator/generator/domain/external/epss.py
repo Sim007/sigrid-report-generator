@@ -15,7 +15,6 @@
 import csv
 import gzip
 import io
-import logging
 import urllib.request
 from functools import cached_property
 
