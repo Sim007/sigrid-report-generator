@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import math
+import statistics
 
 from report_generator.generator.domain import osh_data
 from report_generator.generator.placeholders.formatting.formatters import (
@@ -166,7 +166,9 @@ def osh_probability_of_exploit():
 def osh_average_library_age():
     """Average number of days since the next release of each dependency across the portfolio."""
     distr = osh_data.age_distribution
-    return f"{int(math.mean(distr))} days"
+    if not distr:
+        return "N/A"
+    return f"{int(statistics.mean(distr))} days"
 
 
 @text_placeholder()
