@@ -422,17 +422,6 @@ def _make_component(name, version, risks: dict):
 class TestLibraryRiskLevelsBase:
     """Tests for library_risk_levels via OSHMetricsBase shared logic."""
 
-    def _make_osh_base_instance(self, components):
-        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
-
-        class _Stub(OSHMetricsBase):
-            def get_components(self):
-                return components
-
-        instance = _Stub()
-        # Patch library_risk_levels to call base helpers directly
-        return instance
-
     def test_get_risk_value_returns_correct_integer(self):
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
