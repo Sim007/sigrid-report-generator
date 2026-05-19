@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from datetime import date
 from functools import cached_property
 
@@ -22,14 +23,8 @@ _SEVERITY_LEVELS = ("critical", "high", "medium", "low")
 
 
 def vulnerability_severity_counts(vulnerabilities: list[dict]) -> dict[str, int]:
-    counts: dict[str, int] = {
-        "total": len(vulnerabilities),
-        "critical": 0,
-        "high": 0,
-        "medium": 0,
-        "low": 0,
-        "unknown": 0,
-    }
+    counts: defaultdict[str, int] = defaultdict(int)
+    counts["total"] = len(vulnerabilities)
     for vuln in vulnerabilities:
         severities = {r["severity"].lower() for r in vuln.get("ratings", [])}
         for level in _SEVERITY_LEVELS:

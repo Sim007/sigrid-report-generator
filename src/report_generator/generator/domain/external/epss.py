@@ -28,16 +28,15 @@ class EPSSScoreRetrievalError(Exception):
 
 
 class EPSSData:
-    def _download_epss_data(self) -> bytes:
+    @cached_property
+    def _download_epss_data(self) -> bytes | None:
         try:
             with urllib.request.urlopen(
                 EPSS_URL, timeout=FETCH_TIMEOUT_SECONDS
             ) as response:
                 return response.read()
-        except Exception as e:
-            raise EPSSScoreRetrievalError(
-                f"Failed to fetch EPSS scores from {EPSS_URL}"
-            ) from e
+        except Exception:
+            return None
 
     def _parse_epss_data(self, compressed: bytes) -> dict[str, float]:
         try:
@@ -50,11 +49,10 @@ class EPSSData:
 
     @cached_property
     def epss_scores(self) -> dict[str, float]:
-        try:
-            return self._parse_epss_data(self._download_epss_data())
-        except EPSSScoreRetrievalError:
-            logging.warning("EPSS score retrieval failed.")
-            return {}
+        compressed_data = self._download_epss_data
+        if compressed_data is None:
+            raise EPSSScoreRetrievalError("Failed to download EPSS scores")
+        return self._parse_epss_data(compressed_data)
 
 
 epss_data = EPSSData()
