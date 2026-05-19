@@ -415,3 +415,135 @@ class TestOSHMetricsBase:
         _ = metrics.outdated_count
         _ = metrics.outdated_count
         assert call_count["freshness"] == 1  # Should only calculate once
+
+    def test_cves_with_epss_scores_annotates_known_cves(self):
+        """Test cves_with_epss_scores adds epss-score from epss_data for known CVEs."""
+        from unittest.mock import patch
+
+        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
+
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
+            @property
+            def cves_mapped_to_libraries(self):
+                return {
+                    "CVE-2023-0001": {"count": 2, "libraries": []},
+                    "CVE-2023-0002": {"count": 1, "libraries": []},
+                }
+
+        with patch(
+            "report_generator.generator.domain.shared.osh_base.epss_data"
+        ) as mock_epss:
+            mock_epss.epss_scores = {"CVE-2023-0001": 0.4, "CVE-2023-0002": 0.1}
+            metrics = TestMetrics()
+            result = metrics.cves_with_epss_scores
+
+        assert result["CVE-2023-0001"]["epss-score"] == pytest.approx(0.4)
+        assert result["CVE-2023-0002"]["epss-score"] == pytest.approx(0.1)
+
+    def test_cves_with_epss_scores_sets_none_for_unknown_cves(self):
+        """Test cves_with_epss_scores sets epss-score to None for CVEs not in epss_data."""
+        from unittest.mock import patch
+
+        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
+
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
+            @property
+            def cves_mapped_to_libraries(self):
+                return {"CVE-2023-9999": {"count": 1, "libraries": []}}
+
+        with patch(
+            "report_generator.generator.domain.shared.osh_base.epss_data"
+        ) as mock_epss:
+            mock_epss.epss_scores = {}
+            metrics = TestMetrics()
+            result = metrics.cves_with_epss_scores
+
+        assert result["CVE-2023-9999"]["epss-score"] is None
+
+    def test_exploit_probability_calculated_correctly(self):
+        """Test exploit_probability uses complement product formula across all CVEs."""
+        from unittest.mock import patch
+
+        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
+
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
+            @property
+            def cves_mapped_to_libraries(self):
+                return {
+                    "CVE-2023-0001": {"count": 1, "libraries": []},
+                    "CVE-2023-0002": {"count": 2, "libraries": []},
+                }
+
+        with patch(
+            "report_generator.generator.domain.shared.osh_base.epss_data"
+        ) as mock_epss:
+            mock_epss.epss_scores = {"CVE-2023-0001": 0.3, "CVE-2023-0002": 0.2}
+            metrics = TestMetrics()
+            result = metrics.exploit_probability
+
+        # 1 - (1 - 0.3)^1 * (1 - 0.2)^2 = 1 - 0.7 * 0.64 = 1 - 0.448 = 0.552
+        assert result == pytest.approx(0.552)
+
+    def test_exploit_probability_skips_cves_without_epss_score(self):
+        """Test exploit_probability ignores CVEs where epss-score is None."""
+        from unittest.mock import patch
+
+        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
+
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
+            @property
+            def cves_mapped_to_libraries(self):
+                return {
+                    "CVE-2023-0001": {"count": 1, "libraries": []},
+                    "CVE-2023-9999": {"count": 5, "libraries": []},  # not in EPSS
+                }
+
+        with patch(
+            "report_generator.generator.domain.shared.osh_base.epss_data"
+        ) as mock_epss:
+            mock_epss.epss_scores = {"CVE-2023-0001": 0.5}
+            metrics = TestMetrics()
+            result = metrics.exploit_probability
+
+        # Only CVE-2023-0001 contributes: 1 - (1 - 0.5)^1 = 0.5
+        assert result == pytest.approx(0.5)
+
+    def test_exploit_probability_capped_at_0_9999(self):
+        """Test exploit_probability is capped at 0.9999."""
+        from unittest.mock import patch
+
+        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
+
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
+            @property
+            def cves_mapped_to_libraries(self):
+                return {"CVE-2023-0001": {"count": 100, "libraries": []}}
+
+        with patch(
+            "report_generator.generator.domain.shared.osh_base.epss_data"
+        ) as mock_epss:
+            mock_epss.epss_scores = {"CVE-2023-0001": 0.99}
+            metrics = TestMetrics()
+            result = metrics.exploit_probability
+
+        assert result <= 0.9999
+
+    def test_exploit_probability_is_zero_when_no_cves(self):
+        """Test exploit_probability returns 0.0 when there are no CVEs."""
+        from unittest.mock import patch
+
+        from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
+
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
+            @property
+            def cves_mapped_to_libraries(self):
+                return {}
+
+        with patch(
+            "report_generator.generator.domain.shared.osh_base.epss_data"
+        ) as mock_epss:
+            mock_epss.epss_scores = {}
+            metrics = TestMetrics()
+            result = metrics.exploit_probability
+
+        assert result == pytest.approx(0.0)

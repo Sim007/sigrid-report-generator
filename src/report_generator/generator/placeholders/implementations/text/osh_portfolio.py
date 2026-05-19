@@ -17,7 +17,7 @@ import statistics
 from report_generator.generator.domain import osh_portfolio_data
 from report_generator.generator.placeholders.formatting.formatters import (
     calculate_stars,
-    format_exploit_chance,
+    format_percentage_excluding_100_percent,
     star_rating_round,
 )
 from report_generator.generator.utils.constants import OSHMetric
@@ -165,7 +165,9 @@ def portfolio_osh_avg_rating():
 @text_placeholder()
 def osh_portfolio_probability_of_exploit():
     """Probability that at least one known vulnerability across the portfolio can be exploited within 30 days."""
-    return format_exploit_chance(osh_portfolio_data.exploit_probability)
+    return format_percentage_excluding_100_percent(
+        osh_portfolio_data.exploit_probability
+    )
 
 
 @text_placeholder()

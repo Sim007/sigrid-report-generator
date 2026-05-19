@@ -15,10 +15,12 @@
 import csv
 import gzip
 import io
+import logging
 import urllib.request
 from functools import cached_property
 
-FETCH_TIMEOUT_SECONDS = 60
+FETCH_TIMEOUT_SECONDS = 15
+EPSS_URL = "https://epss.empiricalsecurity.com/epss_scores-current.csv.gz"
 
 
 class EPSSScoreRetrievalError(Exception):
@@ -26,23 +28,33 @@ class EPSSScoreRetrievalError(Exception):
 
 
 class EPSSData:
-    @cached_property
-    def epss_scores(self) -> dict[str, float]:
-        url = "https://epss.empiricalsecurity.com/epss_scores-current.csv.gz"
+    def _download_epss_data(self) -> bytes:
         try:
-            with urllib.request.urlopen(url, timeout=FETCH_TIMEOUT_SECONDS) as response:
-                compressed = response.read()
+            with urllib.request.urlopen(
+                EPSS_URL, timeout=FETCH_TIMEOUT_SECONDS
+            ) as response:
+                return response.read()
         except Exception as e:
             raise EPSSScoreRetrievalError(
-                f"Failed to fetch EPSS scores from {url}"
+                f"Failed to fetch EPSS scores from {EPSS_URL}"
             ) from e
 
-        with gzip.open(io.BytesIO(compressed), "rt") as f:
-            f.readline()  # skip comment line: #model_version:...,score_date:...
-            reader = csv.DictReader(f)
-            _epss_scores_cache = {row["cve"]: float(row["epss"]) for row in reader}
+    def _parse_epss_data(self, compressed: bytes) -> dict[str, float]:
+        try:
+            with gzip.open(io.BytesIO(compressed), "rt") as f:
+                f.readline()  # skip comment line: #model_version:...,score_date:...
+                reader = csv.DictReader(f)
+                return {row["cve"]: float(row["epss"]) for row in reader}
+        except Exception as e:
+            raise EPSSScoreRetrievalError("Failed to parse EPSS scores") from e
 
-        return _epss_scores_cache
+    @cached_property
+    def epss_scores(self) -> dict[str, float]:
+        try:
+            return self._parse_epss_data(self._download_epss_data())
+        except EPSSScoreRetrievalError:
+            logging.warning("EPSS score retrieval failed.")
+            return {}
 
 
 epss_data = EPSSData()

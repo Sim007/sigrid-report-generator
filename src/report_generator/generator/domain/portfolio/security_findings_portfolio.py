@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from functools import cached_property
+from functools import cached_property, lru_cache
 from itertools import chain
 
 from report_generator.generator.context import sigrid_api
@@ -40,6 +40,7 @@ class SecurityPortfolioFindings:
     def findings(self):
         return list(chain.from_iterable(entry["findings"] for entry in self.data))
 
+    @lru_cache  # noqa: B019
     def count_findings(self, severity: str) -> int:
         return sum(1 for finding in self.findings if finding["severity"] == severity)
 

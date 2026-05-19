@@ -23,7 +23,6 @@ from enum import Enum
 from typing import Union
 
 from report_generator.generator.context.sigrid_api import SigridAPIRequestFailedError
-from report_generator.generator.domain.external.epss import EPSSScoreRetrievalError
 from report_generator.generator.report import Report, ReportType
 
 Parameter = Union[str, int, Enum]
@@ -105,8 +104,6 @@ class Placeholder(ABC):
             getattr(cls, resolve_method_name)(report, key, value_fn)
         except SigridAPIRequestFailedError as e:
             logging.info(f"Failed to resolve {key}: {e}")
-        except EPSSScoreRetrievalError as e:
-            logging.info(f"Failed to retrieve EPSS data: {e}")
         except (KeyError, AttributeError, ValueError) as e:
             logging.warning(
                 f"Failed to resolve {key}: Value not found ({type(e).__name__}: {e})"

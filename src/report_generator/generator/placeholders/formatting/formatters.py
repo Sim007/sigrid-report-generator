@@ -112,9 +112,9 @@ def split_days_into_buckets(days: list[int], buckets: list[int]) -> list[int]:
     return [len(days), *counts]
 
 
-def format_exploit_chance(chance: float) -> str:
-    if chance < 0.01:
+def format_percentage_excluding_100_percent(percentage: float) -> str:
+    if percentage < 0.01:
         return "< 1%"
-    if chance > 0.99:
+    if percentage > 0.99:
         return ">99%"
-    return f"{chance:.0%}"
+    return f"{percentage:.0%}"

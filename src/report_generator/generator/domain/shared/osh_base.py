@@ -48,7 +48,7 @@ def map_cves_to_affected_libraries(
     result = {}
     for vuln in vulnerabilities:
         affected = [
-            {"name": c["name"], "version": c["version"], "purl": c.get("purl")}
+            {"name": c.get("name"), "version": c.get("version"), "purl": c.get("purl")}
             for ref in vuln.get("affects", [])
             if (c := components_by_ref.get(ref["ref"]))
         ]
@@ -74,7 +74,10 @@ def component_version_staleness_days(components: list[dict]) -> list[int]:
             properties, "sigrid:next:releaseDate"
         )
         if next_release_date:
-            result.append((today - date.fromisoformat(next_release_date)).days)
+            try:
+                result.append((today - date.fromisoformat(next_release_date)).days)
+            except ValueError:
+                continue
     return result
 
 
@@ -174,7 +177,7 @@ class OSHMetricsBase(ABC):
         return min(1 - product, 0.9999)
 
     @cached_property
-    def cves_with_epss_scores(self) -> None:
+    def cves_with_epss_scores(self) -> dict[str, dict]:
         cves = self.cves_mapped_to_libraries
         epss_scores = epss_data.epss_scores
         for cve_id, data in cves.items():

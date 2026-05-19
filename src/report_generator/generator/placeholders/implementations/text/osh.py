@@ -17,7 +17,7 @@ import statistics
 from report_generator.generator.domain import osh_data
 from report_generator.generator.placeholders.formatting.formatters import (
     calculate_stars,
-    format_exploit_chance,
+    format_percentage_excluding_100_percent,
     star_rating_round,
 )
 from report_generator.generator.utils.constants import OSHMetric
@@ -153,12 +153,12 @@ def osh_stars_param(metric: OSHMetric):
 @text_placeholder()
 def osh_probability_of_exploit():
     """Probability that at least one known vulnerability in this system can be exploited within 30 days."""
-    return format_exploit_chance(osh_data.exploit_probability)
+    return format_percentage_excluding_100_percent(osh_data.exploit_probability)
 
 
 @text_placeholder()
 def osh_average_library_age():
-    """Average number of days since the next release of each dependency across the portfolio."""
+    """Average number of days since the next release of each dependency."""
     distr = osh_data.age_distribution
     if not distr:
         return "N/A"

@@ -30,7 +30,7 @@ from report_generator.generator.domain.shared.osh_base import (
 )
 
 
-def aggregate_cves_across_systems(cves_per_system: dict) -> dict:
+def count_cves_for_portfolio(cves_per_system: dict) -> dict:
     result: dict = {}
     for system_cves in cves_per_system.values():
         if not system_cves:
@@ -309,7 +309,7 @@ class OSHRatingsPortfolioData(RatedPortfolioMixin, OSHMetricsBase):
                 res[system_name] = map_cves_to_affected_libraries(
                     system.get("components", []), system.get("vulnerabilities", [])
                 )
-        return aggregate_cves_across_systems(res)
+        return count_cves_for_portfolio(res)
 
     @cached_property
     def age_distribution(self) -> list[int]:
