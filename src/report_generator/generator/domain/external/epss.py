@@ -33,7 +33,9 @@ class EPSSData:
             with urllib.request.urlopen(url, timeout=FETCH_TIMEOUT_SECONDS) as response:
                 compressed = response.read()
         except Exception as e:
-            raise EPSSScoreRetrievalError(f"Failed to fetch EPSS scores from {url}") from e
+            raise EPSSScoreRetrievalError(
+                f"Failed to fetch EPSS scores from {url}"
+            ) from e
 
         with gzip.open(io.BytesIO(compressed), "rt") as f:
             f.readline()  # skip comment line: #model_version:...,score_date:...
