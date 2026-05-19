@@ -154,6 +154,22 @@ class TestOSHPortfolioData:
         assert "system3" in names
 
 
+class _StubOSHMetrics:
+    """Stub implementations of OSHMetricsBase abstract methods for testing."""
+
+    @property
+    def vulnerability_distribution(self) -> dict[str, int]:
+        return {}
+
+    @property
+    def map_vulnerabilities_to_libraries(self) -> dict[str, dict]:
+        return {}
+
+    @property
+    def age_distribution(self) -> list[int]:
+        return []
+
+
 class TestOSHMetricsBase:
     """Test cases for OSHMetricsBase shared metrics calculations."""
 
@@ -161,7 +177,7 @@ class TestOSHMetricsBase:
         """Test vulnerabilities_count sums critical to low risk levels (0-3)."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             vulnerability_risk_distribution: ClassVar[list] = [
                 5,
                 10,
@@ -178,7 +194,7 @@ class TestOSHMetricsBase:
         """Test vulnerabilities_fraction divides count by total dependencies with minimum."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             vulnerability_risk_distribution: ClassVar[list] = [5, 10, 8, 3, 20]
             dependencies_count = 46
 
@@ -189,7 +205,7 @@ class TestOSHMetricsBase:
         """Test vulnerabilities_fraction returns 0.0 when count is zero."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             vulnerability_risk_distribution: ClassVar[list] = [0, 0, 0, 0, 46]
             dependencies_count = 46
 
@@ -200,7 +216,7 @@ class TestOSHMetricsBase:
         """Test vulnerabilities_fraction has a minimum value of 0.01."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             vulnerability_risk_distribution: ClassVar[list] = [0, 0, 0, 1, 999]
             dependencies_count = 1000
 
@@ -211,7 +227,7 @@ class TestOSHMetricsBase:
         """Test outdated_count sums critical to medium freshness risk (0-2), excluding low."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             freshness_risk_distribution: ClassVar[list] = [
                 3,
                 7,
@@ -228,7 +244,7 @@ class TestOSHMetricsBase:
         """Test outdated_fraction divides count by total dependencies with minimum."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             freshness_risk_distribution: ClassVar[list] = [3, 7, 12, 5, 20]
             dependencies_count = 47
 
@@ -239,7 +255,7 @@ class TestOSHMetricsBase:
         """Test legal_risk_count sums critical to medium license risk (0-2), excluding low."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             legal_risk_distribution: ClassVar[list] = [
                 2,
                 5,
@@ -256,7 +272,7 @@ class TestOSHMetricsBase:
         """Test legal_risk_fraction divides count by total dependencies with minimum."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             legal_risk_distribution: ClassVar[list] = [2, 5, 8, 10, 25]
             dependencies_count = 50
 
@@ -267,7 +283,7 @@ class TestOSHMetricsBase:
         """Test unmanaged_count sums critical to low management risk (0-3)."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             management_risk_distribution: ClassVar[list] = [
                 1,
                 3,
@@ -284,7 +300,7 @@ class TestOSHMetricsBase:
         """Test unmanaged_fraction divides count by total dependencies with minimum."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             management_risk_distribution: ClassVar[list] = [1, 3, 5, 7, 30]
             dependencies_count = 46
 
@@ -295,7 +311,7 @@ class TestOSHMetricsBase:
         """Test activity_risk_count sums critical to low activity risk (0-3)."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             activity_risk_distribution: ClassVar[list] = [
                 2,
                 4,
@@ -312,7 +328,7 @@ class TestOSHMetricsBase:
         """Test activity_risk_fraction divides count by total dependencies with minimum."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             activity_risk_distribution: ClassVar[list] = [2, 4, 6, 8, 35]
             dependencies_count = 55
 
@@ -323,7 +339,7 @@ class TestOSHMetricsBase:
         """Test all fraction methods apply minimum floor of 0.01 when count is non-zero."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             vulnerability_risk_distribution: ClassVar[list] = [0, 0, 0, 1, 9999]
             freshness_risk_distribution: ClassVar[list] = [1, 0, 0, 0, 9999]
             legal_risk_distribution: ClassVar[list] = [0, 1, 0, 0, 9999]
@@ -342,7 +358,7 @@ class TestOSHMetricsBase:
         """Test all fraction methods return 0.0 when respective counts are zero."""
         from report_generator.generator.domain.shared.osh_base import OSHMetricsBase
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             vulnerability_risk_distribution: ClassVar[list] = [0, 0, 0, 0, 100]
             freshness_risk_distribution: ClassVar[list] = [0, 0, 0, 50, 50]
             legal_risk_distribution: ClassVar[list] = [0, 0, 0, 50, 50]
@@ -363,7 +379,7 @@ class TestOSHMetricsBase:
 
         call_count = {"vulnerability": 0, "freshness": 0}
 
-        class TestMetrics(OSHMetricsBase):
+        class TestMetrics(_StubOSHMetrics, OSHMetricsBase):
             dependencies_count = 100
 
             @property
