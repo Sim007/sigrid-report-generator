@@ -125,7 +125,7 @@ class OSHData(OSHMetricsBase):
         return vulnerability_severity_counts(self.vulnerabilities)
 
     @cached_property
-    def map_vulnerabilities_to_libraries(self) -> dict[str, dict]:
+    def cves_mapped_to_libraries(self) -> dict[str, dict]:
         return map_cves_to_affected_libraries(self.components, self.vulnerabilities)
 
     @cached_property

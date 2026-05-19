@@ -16,6 +16,8 @@ from abc import ABC, abstractmethod
 from datetime import date
 from functools import cached_property
 
+from report_generator.generator.domain.external.epss import epss_data
+
 _SEVERITY_LEVELS = ("critical", "high", "medium", "low")
 
 
@@ -156,8 +158,25 @@ class OSHMetricsBase(ABC):
 
     @property
     @abstractmethod
-    def map_vulnerabilities_to_libraries(self) -> dict[str, dict]: ...
+    def cves_mapped_to_libraries(self) -> dict[str, dict]: ...
 
     @property
     @abstractmethod
     def age_distribution(self) -> list[int]: ...
+
+    @cached_property
+    def exploit_probability(self) -> float:
+        cves = self.cves_with_epss_scores
+        product = 1.0
+        for data in cves.values():
+            if data["epss-score"] is not None:
+                product *= (1 - data["epss-score"]) ** data["count"]
+        return min(1 - product, 0.9999)
+
+    @cached_property
+    def cves_with_epss_scores(self) -> None:
+        cves = self.cves_mapped_to_libraries
+        epss_scores = epss_data.epss_scores
+        for cve_id, data in cves.items():
+            data["epss-score"] = epss_scores.get(cve_id)
+        return cves

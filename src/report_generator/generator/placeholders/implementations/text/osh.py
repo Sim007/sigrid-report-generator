@@ -20,10 +20,6 @@ from report_generator.generator.placeholders.formatting.formatters import (
     format_exploit_chance,
     star_rating_round,
 )
-from report_generator.generator.placeholders.implementations.text.shared.osh_utils import (
-    enrich_cves_with_epss_scores,
-    exploit_probability,
-)
 from report_generator.generator.utils.constants import OSHMetric
 
 from ...formatting import smart_remarks
@@ -157,9 +153,7 @@ def osh_stars_param(metric: OSHMetric):
 @text_placeholder()
 def osh_probability_of_exploit():
     """Probability that at least one known vulnerability in this system can be exploited within 30 days."""
-    cves = osh_data.map_vulnerabilities_to_libraries
-    enrich_cves_with_epss_scores(cves=cves)
-    return format_exploit_chance(exploit_probability(cves))
+    return format_exploit_chance(osh_data.exploit_probability)
 
 
 @text_placeholder()

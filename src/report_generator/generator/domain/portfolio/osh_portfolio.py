@@ -30,6 +30,18 @@ from report_generator.generator.domain.shared.osh_base import (
 )
 
 
+def aggregate_cves_across_systems(cves_per_system: dict) -> dict:
+    result: dict = {}
+    for system_cves in cves_per_system.values():
+        if not system_cves:
+            continue
+        for cve, data in system_cves.items():
+            if cve not in result:
+                result[cve] = {"count": 0}
+            result[cve]["count"] += data["count"]
+    return result
+
+
 class OSHRatingsPortfolioData(RatedPortfolioMixin, OSHMetricsBase):
     @cached_property
     @filter_data_on_portfolio_arguments(data_tag="systems", system_tag="systemName")
@@ -289,7 +301,7 @@ class OSHRatingsPortfolioData(RatedPortfolioMixin, OSHMetricsBase):
         return vulnerability_severity_counts(res)
 
     @cached_property
-    def map_vulnerabilities_to_libraries(self) -> dict[str, dict]:
+    def cves_mapped_to_libraries(self) -> dict[str, dict]:
         res = {}
         for system_name in self.system_names:
             system = self.find_system(system_name)["sbom"]
@@ -297,7 +309,7 @@ class OSHRatingsPortfolioData(RatedPortfolioMixin, OSHMetricsBase):
                 res[system_name] = map_cves_to_affected_libraries(
                     system.get("components", []), system.get("vulnerabilities", [])
                 )
-        return res
+        return aggregate_cves_across_systems(res)
 
     @cached_property
     def age_distribution(self) -> list[int]:

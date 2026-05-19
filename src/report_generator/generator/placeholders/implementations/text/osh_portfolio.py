@@ -20,11 +20,6 @@ from report_generator.generator.placeholders.formatting.formatters import (
     format_exploit_chance,
     star_rating_round,
 )
-from report_generator.generator.placeholders.implementations.text.shared.osh_utils import (
-    aggregate_cves_across_systems,
-    enrich_cves_with_epss_scores,
-    exploit_probability,
-)
 from report_generator.generator.utils.constants import OSHMetric
 
 from ...formatting import smart_remarks
@@ -170,10 +165,7 @@ def portfolio_osh_avg_rating():
 @text_placeholder()
 def osh_portfolio_probability_of_exploit():
     """Probability that at least one known vulnerability across the portfolio can be exploited within 30 days."""
-    cves_per_system = osh_portfolio_data.map_vulnerabilities_to_libraries
-    cves = aggregate_cves_across_systems(cves_per_system=cves_per_system)
-    enrich_cves_with_epss_scores(cves=cves)
-    return format_exploit_chance(exploit_probability(cves))
+    return format_exploit_chance(osh_portfolio_data.exploit_probability)
 
 
 @text_placeholder()
