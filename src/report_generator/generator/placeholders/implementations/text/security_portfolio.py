@@ -368,24 +368,29 @@ def portfolio_sec_low_resolution_high_risk():
 
 @text_placeholder()
 def security_portfolio_total_cvss_findings_raw():
+    """Total number of security findings with a CVSS severity across the portfolio (critical + high + medium + low)."""
     return f"{security_findings_portfolio_data.count_findings('CRITICAL') + security_findings_portfolio_data.count_findings('HIGH') + security_findings_portfolio_data.count_findings('MEDIUM') + security_findings_portfolio_data.count_findings('LOW')}"
 
 
 @text_placeholder()
 def security_portfolio_cvss_critical_raw():
+    """Number of security findings with CVSS critical severity across the portfolio."""
     return f"{security_findings_portfolio_data.count_findings('CRITICAL')}"
 
 
 @text_placeholder()
 def security_portfolio_cvss_high_raw():
+    """Number of security findings with CVSS high severity across the portfolio."""
     return f"{security_findings_portfolio_data.count_findings('HIGH')}"
 
 
 @text_placeholder()
 def security_portfolio_cvss_medium_raw():
+    """Number of security findings with CVSS medium severity across the portfolio."""
     return f"{security_findings_portfolio_data.count_findings('MEDIUM')}"
 
 
 @text_placeholder()
 def security_portfolio_cvss_low_raw():
+    """Number of security findings with CVSS low severity across the portfolio."""
     return f"{security_findings_portfolio_data.count_findings('LOW')}"

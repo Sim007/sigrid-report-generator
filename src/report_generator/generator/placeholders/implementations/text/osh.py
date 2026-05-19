@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import statistics
+import math
 
 from report_generator.generator.domain import osh_data
 from report_generator.generator.placeholders.formatting.formatters import (
@@ -156,42 +156,49 @@ def osh_stars_param(metric: OSHMetric):
 
 @text_placeholder()
 def osh_probability_of_exploit():
+    """Probability that at least one known vulnerability in this system can be exploited within 30 days."""
     cves = osh_data.map_vulnerabilities_to_libraries
     enrich_cves_with_epss_scores(cves=cves)
     return format_exploit_chance(exploit_probability(cves))
 
 
 @text_placeholder()
-def osh_median_library_age():
+def osh_average_library_age():
+    """Average number of days since the next release of each dependency across the portfolio."""
     distr = osh_data.age_distribution
-    return f"{int(statistics.median(distr))} days"
+    return f"{int(math.mean(distr))} days"
 
 
 @text_placeholder()
 def osh_known_vulnerabilities_total_minus_unknown():
+    """Total number of known vulnerabilities with a CVSS severity (critical + high + medium + low)."""
     distr = osh_data.vulnerability_distribution
     return f"{distr['critical'] + distr['high'] + distr['medium'] + distr['low']}"
 
 
 @text_placeholder()
 def osh_known_vulnerabilities_critical():
+    """Number of known vulnerabilities with CVSS critical severity."""
     distr = osh_data.vulnerability_distribution
     return f"{distr['critical']}"
 
 
 @text_placeholder()
 def osh_known_vulnerabilities_high():
+    """Number of known vulnerabilities with CVSS high severity."""
     distr = osh_data.vulnerability_distribution
     return f"{distr['high']}"
 
 
 @text_placeholder()
 def osh_known_vulnerabilities_medium():
+    """Number of known vulnerabilities with CVSS medium severity."""
     distr = osh_data.vulnerability_distribution
     return f"{distr['medium']}"
 
 
 @text_placeholder()
 def osh_known_vulnerabilities_low():
+    """Number of known vulnerabilities with CVSS low severity."""
     distr = osh_data.vulnerability_distribution
     return f"{distr['low']}"

@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import statistics
+import math
 
 from report_generator.generator.domain import osh_portfolio_data
 from report_generator.generator.placeholders.formatting.formatters import (
@@ -169,6 +169,7 @@ def portfolio_osh_avg_rating():
 
 @text_placeholder()
 def osh_portfolio_probability_of_exploit():
+    """Probability that at least one known vulnerability across the portfolio can be exploited within 30 days."""
     cves_per_system = osh_portfolio_data.map_vulnerabilities_to_libraries
     cves = aggregate_cves_across_systems(cves_per_system=cves_per_system)
     enrich_cves_with_epss_scores(cves=cves)
@@ -176,36 +177,42 @@ def osh_portfolio_probability_of_exploit():
 
 
 @text_placeholder()
-def osh_portfolio_median_library_age():
+def osh_portfolio_average_library_age():
+    """Average number of days since the next release of each dependency across the portfolio."""
     distr = osh_portfolio_data.age_distribution
-    return f"{int(statistics.median(distr))} days"
+    return f"{int(math.mean(distr))} days"
 
 
 @text_placeholder()
 def osh_portfolio_known_vulnerabilities_total_minus_unknown():
+    """Total number of known vulnerabilities with a CVSS severity across the portfolio (critical + high + medium + low)."""
     distr = osh_portfolio_data.vulnerability_distribution
     return f"{distr['critical'] + distr['high'] + distr['medium'] + distr['low']}"
 
 
 @text_placeholder()
 def osh_portfolio_known_vulnerabilities_critical():
+    """Number of known vulnerabilities with CVSS critical severity across the portfolio."""
     distr = osh_portfolio_data.vulnerability_distribution
     return f"{distr['critical']}"
 
 
 @text_placeholder()
 def osh_portfolio_known_vulnerabilities_high():
+    """Number of known vulnerabilities with CVSS high severity across the portfolio."""
     distr = osh_portfolio_data.vulnerability_distribution
     return f"{distr['high']}"
 
 
 @text_placeholder()
 def osh_portfolio_known_vulnerabilities_medium():
+    """Number of known vulnerabilities with CVSS medium severity across the portfolio."""
     distr = osh_portfolio_data.vulnerability_distribution
     return f"{distr['medium']}"
 
 
 @text_placeholder()
 def osh_portfolio_known_vulnerabilities_low():
+    """Number of known vulnerabilities with CVSS low severity across the portfolio."""
     distr = osh_portfolio_data.vulnerability_distribution
     return f"{distr['low']}"
