@@ -1181,6 +1181,10 @@ class TestSecurityDashboardFindingsPortfolioData:
         mock_sigrid_api.get_portfolio_security_dashboard_findings.return_value = (
             mock_data
         )
+        mock_sigrid_api.get_portfolio_metadata.return_value = [
+            {"systemName": "system1"},
+            {"systemName": "system2"},
+        ]
 
         security_dashboard_findings_portfolio_data.__dict__.pop("data", None)
 
@@ -1205,6 +1209,11 @@ class TestSecurityDashboardFindingsPortfolioData:
         mock_sigrid_api.get_portfolio_security_dashboard_findings.return_value = (
             mock_data
         )
+        mock_sigrid_api.get_portfolio_metadata.return_value = [
+            {"systemName": "system1"},
+            {"systemName": "system2"},
+            {"systemName": "system3"},
+        ]
 
         for attr in ["data", "system_names"]:
             security_dashboard_findings_portfolio_data.__dict__.pop(attr, None)
@@ -1215,6 +1224,32 @@ class TestSecurityDashboardFindingsPortfolioData:
         assert "system1" in names
         assert "system2" in names
         assert "system3" in names
+
+    @patch(
+        "report_generator.generator.domain.portfolio.security_dashboard_findings_portfolio.sigrid_api"
+    )
+    def test_excluded_systems_are_filtered_from_data(self, mock_sigrid_api):
+        """Test that systems absent from metadata are excluded from data."""
+        mock_data = {
+            "systems": [
+                {"system": "active_system", "findingRatio": []},
+                {"system": "excluded_system", "findingRatio": []},
+            ]
+        }
+        mock_sigrid_api.get_portfolio_security_dashboard_findings.return_value = (
+            mock_data
+        )
+        mock_sigrid_api.get_portfolio_metadata.return_value = [
+            {"systemName": "active_system"},
+        ]
+
+        security_dashboard_findings_portfolio_data.__dict__.pop("data", None)
+
+        data = security_dashboard_findings_portfolio_data.data
+
+        system_names = [s["system"] for s in data["systems"]]
+        assert system_names == ["active_system"]
+        assert "excluded_system" not in system_names
 
 
 class TestSecurityDashboardResolutionTimesPortfolioData:
@@ -1242,6 +1277,10 @@ class TestSecurityDashboardResolutionTimesPortfolioData:
         mock_sigrid_api.get_portfolio_security_resolution_time_findings.return_value = (
             mock_data
         )
+        mock_sigrid_api.get_portfolio_metadata.return_value = [
+            {"systemName": "system1"},
+            {"systemName": "system2"},
+        ]
 
         security_dashboard_resolution_times_portfolio_data.__dict__.pop("data", None)
 
@@ -1268,6 +1307,11 @@ class TestSecurityDashboardResolutionTimesPortfolioData:
         mock_sigrid_api.get_portfolio_security_resolution_time_findings.return_value = (
             mock_data
         )
+        mock_sigrid_api.get_portfolio_metadata.return_value = [
+            {"systemName": "system1"},
+            {"systemName": "system2"},
+            {"systemName": "system3"},
+        ]
 
         for attr in ["data", "system_names"]:
             security_dashboard_resolution_times_portfolio_data.__dict__.pop(attr, None)
@@ -1278,3 +1322,29 @@ class TestSecurityDashboardResolutionTimesPortfolioData:
         assert "system1" in names
         assert "system2" in names
         assert "system3" in names
+
+    @patch(
+        "report_generator.generator.domain.portfolio.security_dashboard_resolution_times_portfolio.sigrid_api"
+    )
+    def test_excluded_systems_are_filtered_from_data(self, mock_sigrid_api):
+        """Test that systems absent from metadata are excluded from data."""
+        mock_data = {
+            "systems": [
+                {"system": "active_system", "resolutionTimes": []},
+                {"system": "excluded_system", "resolutionTimes": []},
+            ]
+        }
+        mock_sigrid_api.get_portfolio_security_resolution_time_findings.return_value = (
+            mock_data
+        )
+        mock_sigrid_api.get_portfolio_metadata.return_value = [
+            {"systemName": "active_system"},
+        ]
+
+        security_dashboard_resolution_times_portfolio_data.__dict__.pop("data", None)
+
+        data = security_dashboard_resolution_times_portfolio_data.data
+
+        system_names = [s["system"] for s in data["systems"]]
+        assert system_names == ["active_system"]
+        assert "excluded_system" not in system_names
